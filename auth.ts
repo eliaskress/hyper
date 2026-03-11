@@ -1,27 +1,36 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 
 const config: NextAuthConfig = {
   providers: [
-    // Instagram OAuth — stubbed for development
-    // To test locally, use the Credentials provider below
-    {
-      id: "instagram",
-      name: "Instagram",
-      type: "oauth",
-      authorization: "https://api.instagram.com/oauth/authorize",
-      token: "https://api.instagram.com/oauth/access_token",
-      userinfo: "https://graph.instagram.com/me?fields=id,username",
-      clientId: process.env.INSTAGRAM_CLIENT_ID,
-      clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.username,
-          image: null,
-        };
+    Credentials({
+      id: "demo-login",
+      name: "Demo Login",
+      credentials: {
+        role: { label: "Role", type: "text" },
       },
-    },
+      async authorize(credentials) {
+        const role = credentials?.role as string;
+        if (role === "brand") {
+          return {
+            id: "demo-brand-001",
+            name: "Bacio di Latte",
+            email: "demo-brand@hyper.local",
+            role: "brand",
+          };
+        }
+        if (role === "influencer") {
+          return {
+            id: "demo-creator-001",
+            name: "Maria Santos",
+            email: "demo-creator@hyper.local",
+            role: "influencer",
+          };
+        }
+        return null;
+      },
+    }),
   ],
   session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
   pages: {
@@ -31,23 +40,27 @@ const config: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-      const isOnApi = nextUrl.pathname.startsWith("/api/campaigns") || nextUrl.pathname.startsWith("/api/applications");
+      const isOnApi =
+        nextUrl.pathname.startsWith("/api/campaigns") ||
+        nextUrl.pathname.startsWith("/api/applications");
 
       if (isOnDashboard || isOnApi) {
         if (isLoggedIn) return true;
-        return false; // Redirect to login
+        return false;
       }
       return true;
     },
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role;
       }
       return token;
     },
     session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as "brand" | "influencer" | null;
       }
       return session;
     },
