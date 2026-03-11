@@ -1,8 +1,9 @@
 import { getBrandByUserId, getBrandBriefing, getBriefingReports, getBrandStats } from "@/lib/db/queries";
 import { Card, StatCard } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-
 import { WhatsAppPreview } from "@/components/ui/whatsapp-preview";
+import { MetricsInput } from "./metrics-input";
+import { PayButton } from "./pay-button";
 
 export const dynamic = "force-dynamic";
 
@@ -124,12 +125,17 @@ export default async function ReportsPage() {
                       </div>
                     </div>
                   </div>
+                  {post.assignmentStatus === "measured" && (
+                    <PayButton assignmentId={post.assignmentId} />
+                  )}
                   {post.measuredAt && (
                     <p className="text-xs text-gray-400 mt-2">
                       Measured {new Date(post.measuredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </p>
                   )}
                 </>
+              ) : post.postUrl && post.assignmentStatus === "posted" ? (
+                <MetricsInput assignmentId={post.assignmentId} />
               ) : (
                 <div className="bg-amber-50 rounded-lg p-3 mt-2 text-sm text-amber-700">
                   Awaiting measurement — metrics will be captured 7 days after posting

@@ -4,6 +4,8 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { HiBudget } from "@/components/ui/hi-display";
 import { WhatsAppPreview } from "@/components/ui/whatsapp-preview";
 import { PRICE_PER_HI } from "@/lib/hi";
+import { BriefingForm } from "./briefing-form";
+import { BriefingStatusToggle } from "./briefing-status-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -18,17 +20,9 @@ export default async function BriefingPage() {
   if (!briefing) {
     return (
       <div className="p-4 space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">Your Briefing</h1>
-        <Card className="p-6 text-center">
-          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-              <path d="M14 2v6h6" />
-              <path d="M12 18v-6M9 15h6" />
-            </svg>
-          </div>
-          <h2 className="font-semibold mb-1">No briefing yet</h2>
-          <p className="text-sm text-gray-500">Complete the onboarding questionnaire to create your first briefing.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Create Your Briefing</h1>
+        <Card className="p-4">
+          <BriefingForm />
         </Card>
       </div>
     );
@@ -44,7 +38,10 @@ export default async function BriefingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Your Briefing</h1>
-        <StatusBadge status={briefing.status} />
+        <div className="flex items-center gap-2">
+          <BriefingStatusToggle briefingId={briefing.id} currentStatus={briefing.status} />
+          <StatusBadge status={briefing.status} />
+        </div>
       </div>
 
       {/* Budget */}
@@ -73,6 +70,14 @@ export default async function BriefingPage() {
         <h2 className="text-sm font-semibold text-gray-900 mb-2">Content Brief</h2>
         <p className="text-sm text-gray-700 leading-relaxed">{briefing.contentBrief}</p>
       </Card>
+
+      {/* Offer */}
+      {briefing.offerDescription && (
+        <Card className="p-4">
+          <h2 className="text-sm font-semibold text-gray-900 mb-2">What&apos;s Included</h2>
+          <p className="text-sm text-gray-700 leading-relaxed">{briefing.offerDescription}</p>
+        </Card>
+      )}
 
       {/* Availability */}
       <Card className="p-4">
@@ -115,6 +120,22 @@ export default async function BriefingPage() {
             </div>
           </div>
         </div>
+      </Card>
+
+      {/* Edit Briefing */}
+      <Card className="p-4">
+        <h2 className="text-sm font-semibold text-gray-900 mb-3">Edit Briefing</h2>
+        <BriefingForm
+          existing={{
+            id: briefing.id,
+            contentBrief: briefing.contentBrief,
+            offerDescription: briefing.offerDescription ?? "",
+            availabilityDays: days,
+            availabilityMeals: meals,
+            budgetHi: briefing.budgetHi,
+            budgetType: briefing.budgetTypeField,
+          }}
+        />
       </Card>
 
       {/* WhatsApp Preview */}

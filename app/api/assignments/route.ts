@@ -3,11 +3,11 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { assignments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { getAssignmentById } from "@/lib/db/queries";
+import { getAssignmentById, getPayoutByAssignmentId, updatePayoutStatus } from "@/lib/db/queries";
 
 const patchSchema = z.object({
   assignmentId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
-  action: z.enum(["accept", "decline", "schedule"]),
+  action: z.enum(["accept", "decline", "schedule", "pay"]),
   declineReason: z.string().min(1).optional(),
   scheduledDate: z.string().optional(),
   scheduleTimeStart: z.string().optional(),
@@ -97,6 +97,31 @@ export async function PATCH(request: NextRequest) {
         })
         .where(eq(assignments.id, assignmentId))
         .returning();
+      return NextResponse.json(updated);
+    }
+
+    if (action === "pay") {
+      if (assignment.status !== "measured") {
+        return NextResponse.json(
+          { error: "Can only pay measured assignments", code: "INVALID_STATUS" },
+          { status: 409 },
+        );
+      }
+      const payout = await getPayoutByAssignmentId(assignmentId);
+      if (!payout) {
+        return NextResponse.json(
+          { error: "No payout record found", code: "NO_PAYOUT" },
+          { status: 404 },
+        );
+      }
+      // Mark assignment as paid
+      const [updated] = await db
+        .update(assignments)
+        .set({ status: "paid" })
+        .where(eq(assignments.id, assignmentId))
+        .returning();
+      // Update payout status with demo stripe transfer ID
+      await updatePayoutStatus(payout.id, "paid", `demo_tr_${Date.now()}`);
       return NextResponse.json(updated);
     }
 

@@ -20,14 +20,14 @@ export default async function InfluencerHome() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-10">
-        <StatCard label="Assignments" value={stats.totalAssignments} />
+        <StatCard label="Collabs" value={stats.totalAssignments} />
         <StatCard label="Completed" value={stats.completedAssignments} />
         <StatCard label="Earned" value={`$${stats.totalEarned}`} accent />
         <StatCard label="Total HI" value={parseFloat(stats.totalHi).toFixed(1)} />
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold">Your Assignments</h2>
+        <h2 className="text-lg font-bold">Your Collabs</h2>
         <Link href="/influencer/assignments" className="text-xs text-gray-400 font-medium hover:text-gray-600">
           View all &rarr;
         </Link>
@@ -35,7 +35,7 @@ export default async function InfluencerHome() {
 
       {assignments.length === 0 ? (
         <Card className="text-center py-10">
-          <p className="font-medium text-gray-900 mb-1">No assignments yet</p>
+          <p className="font-medium text-gray-900 mb-1">No collabs yet</p>
           <p className="text-sm text-gray-400">Hyper will match you with restaurants based on your HIG score.</p>
         </Card>
       ) : (
@@ -78,7 +78,7 @@ export default async function InfluencerHome() {
       {/* WhatsApp note */}
       <div className="bg-gray-50 rounded-xl p-4 text-center mt-6">
         <p className="text-xs text-gray-500">
-          Assignment invitations and updates are sent via WhatsApp.
+          Collab invitations and updates are sent via WhatsApp.
           <br />
           Hyper matches you based on your HIG score and location.
         </p>

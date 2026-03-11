@@ -13,7 +13,7 @@ const brandTabs = [
 
 const influencerTabs = [
   { href: "/influencer", label: "Home", icon: HomeIcon },
-  { href: "/influencer/assignments", label: "Assignments", icon: AssignmentIcon },
+  { href: "/influencer/assignments", label: "Collabs", icon: AssignmentIcon },
   { href: "/influencer/earnings", label: "Earnings", icon: WalletIcon },
   { href: "/influencer/profile", label: "Profile", icon: ProfileIcon },
 ];

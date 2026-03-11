@@ -43,6 +43,25 @@ export default async function AssignmentDetailPage({
         <p className="text-sm text-gray-700 leading-relaxed">{a.contentBrief}</p>
       </Card>
 
+      {/* What's Included */}
+      {a.offerDescription && (
+        <Card className="mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6" />
+                <path d="M2 8h20v4H2z" />
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 mb-1">What&apos;s Included</h2>
+              <p className="text-sm text-gray-700 leading-relaxed">{a.offerDescription}</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Availability */}
       <Card className="mb-4">
         <h2 className="text-sm font-semibold text-gray-900 mb-3">Restaurant Availability</h2>

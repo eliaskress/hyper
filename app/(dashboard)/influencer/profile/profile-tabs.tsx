@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 
 type Tab = "info" | "payments";
@@ -68,7 +69,48 @@ export function ProfileTabs({ profile, stats }: { profile: Profile; stats: Stats
 }
 
 function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
-  const instagramUrl = `https://instagram.com/${profile.handle}`;
+  const [editing, setEditing] = useState(false);
+  const [handle, setHandle] = useState(profile.handle);
+  const [location, setLocation] = useState(profile.location ?? "");
+  const [primaryPlatform, setPrimaryPlatform] = useState(profile.primaryPlatform ?? "instagram");
+  const [platforms, setPlatforms] = useState<string[]>(profile.platforms ?? []);
+  const [newPlatformUrl, setNewPlatformUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  async function handleSave() {
+    if (!handle.trim()) {
+      setError("Handle is required.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/creators/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: profile.id,
+          handle: handle.trim(),
+          location: location.trim() || undefined,
+          primaryPlatform,
+          platforms: platforms.length > 0 ? platforms : undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Failed to update.");
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    } catch {
+      setError("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -77,11 +119,131 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-2xl font-bold text-gray-500">
           {profile.handle.charAt(0).toUpperCase()}
         </div>
-        <div>
+        <div className="flex-1">
           <p className="text-xl font-bold">@{profile.handle}</p>
           <p className="text-sm text-gray-400">{profile.location ?? "Location not set"}</p>
         </div>
+        {!editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+          >
+            Edit
+          </button>
+        )}
       </div>
+
+      {/* Edit form */}
+      {editing && (
+        <Card>
+          <h2 className="font-bold mb-3">Edit Profile</h2>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-500 font-medium block mb-1">Handle</label>
+              <div className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2.5">
+                <span className="text-sm text-gray-400">@</span>
+                <input
+                  type="text"
+                  value={handle}
+                  onChange={(e) => setHandle(e.target.value)}
+                  className="flex-1 text-sm bg-transparent focus:outline-none min-h-[24px]"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 font-medium block mb-1">Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Los Angeles, CA"
+                className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent min-h-[44px]"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 font-medium block mb-1.5">Primary Platform</label>
+              <div className="flex gap-2">
+                {(["instagram", "tiktok", "youtube"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPrimaryPlatform(p)}
+                    className={`flex-1 text-sm py-2 rounded-lg font-semibold capitalize transition-all min-h-[40px] ${
+                      primaryPlatform === p
+                        ? "bg-black text-white"
+                        : "border-2 border-gray-200 text-gray-500 hover:border-gray-400"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 font-medium block mb-1">Platform URLs</label>
+              {platforms.map((url, i) => (
+                <div key={i} className="flex items-center gap-1.5 mb-1.5">
+                  <p className="flex-1 text-sm text-gray-700 truncate">{url.replace(/https?:\/\//, "")}</p>
+                  <button
+                    type="button"
+                    onClick={() => setPlatforms((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-1.5 mt-1">
+                <input
+                  type="url"
+                  value={newPlatformUrl}
+                  onChange={(e) => setNewPlatformUrl(e.target.value)}
+                  placeholder="https://tiktok.com/@yourhandle"
+                  className="flex-1 text-sm rounded-lg border border-gray-200 px-3 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent min-h-[40px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const trimmed = newPlatformUrl.trim();
+                    if (trimmed && !platforms.includes(trimmed)) {
+                      setPlatforms((prev) => [...prev, trimmed]);
+                      setNewPlatformUrl("");
+                    }
+                  }}
+                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition-all min-h-[40px]"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            {error && <p className="text-xs text-red-600">{error}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="flex-1 rounded-xl bg-black text-white py-3 font-semibold text-sm hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-50 min-h-[44px]"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={() => {
+                  setEditing(false);
+                  setHandle(profile.handle);
+                  setLocation(profile.location ?? "");
+                  setPrimaryPlatform(profile.primaryPlatform ?? "instagram");
+                  setPlatforms(profile.platforms ?? []);
+                  setNewPlatformUrl("");
+                  setError("");
+                }}
+                className="rounded-xl border-2 border-gray-200 px-5 py-3 font-semibold text-sm hover:bg-gray-50 transition-all min-h-[44px]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* HIG Score */}
       <Card>
@@ -107,34 +269,18 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
         </div>
       </Card>
 
+      {/* Platforms */}
       <Card>
-        <div className="flex flex-col gap-4">
-          <InfoRow label="Instagram">
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-indigo-600 font-medium hover:underline"
-            >
-              instagram.com/{profile.handle}
-            </a>
-          </InfoRow>
-          <InfoRow label="Followers">
-            <p className="font-semibold text-lg">
-              {profile.followersCount
-                ? profile.followersCount.toLocaleString()
-                : "Syncing..."}
-            </p>
-          </InfoRow>
-          <InfoRow label="Primary Platform">
-            <p className="font-medium capitalize">{profile.primaryPlatform ?? "Instagram"}</p>
-          </InfoRow>
-          {profile.platforms && profile.platforms.length > 0 && (
-            <InfoRow label="Platforms">
-              <div className="flex flex-col gap-1">
-                {profile.platforms.map((url, i) => (
+        <h2 className="font-bold mb-3">Platforms</h2>
+        <div className="flex flex-col divide-y divide-gray-100">
+          {(profile.platforms && profile.platforms.length > 0 ? profile.platforms : []).map((url, i) => {
+            const platformName = parsePlatformName(url);
+            const isPrimary = platformName === (profile.primaryPlatform ?? "instagram");
+            return (
+              <div key={i} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-sm font-semibold capitalize shrink-0">{platformName}</span>
                   <a
-                    key={i}
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -142,10 +288,23 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
                   >
                     {url.replace(/https?:\/\//, "")}
                   </a>
-                ))}
+                </div>
+                <span className="text-sm font-medium text-gray-600 shrink-0 ml-3">
+                  {isPrimary && profile.followersCount
+                    ? profile.followersCount.toLocaleString()
+                    : "—"}
+                </span>
               </div>
-            </InfoRow>
+            );
+          })}
+          {(!profile.platforms || profile.platforms.length === 0) && (
+            <p className="text-sm text-gray-400">No platforms linked yet</p>
           )}
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex flex-col gap-4">
           <InfoRow label="Location">
             <p className="font-medium">{profile.location ?? "Not set"}</p>
           </InfoRow>
@@ -165,7 +324,7 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
         <div className="grid grid-cols-2 gap-4">
           <MiniStat label="Tier" value={profile.tier} capitalize />
           <MiniStat label="XP" value={profile.xp.toLocaleString()} />
-          <MiniStat label="Assignments" value={stats.completedAssignments} />
+          <MiniStat label="Collabs" value={stats.completedAssignments} />
           <MiniStat label="Total Earned" value={`$${stats.totalEarned}`} />
           <MiniStat label="Total HI" value={parseFloat(stats.totalHi).toFixed(1)} />
           <MiniStat label="HIG Score" value={`${profile.higScore}/100`} />
@@ -235,7 +394,7 @@ function PaymentsTab({ profile }: { profile: Profile }) {
         <h2 className="font-bold mb-4">How Payouts Work</h2>
         <div className="flex flex-col gap-4">
           {[
-            { step: "1", text: "Hyper matches you with a restaurant" },
+            { step: "1", text: "Hyper matches you with a collab" },
             { step: "2", text: "Visit, create content, and post" },
             { step: "3", text: "Send analytics 7 days later — HI is calculated" },
             { step: "4", text: "Earn $4/HI (40% creator share of $10/HI)" },
@@ -269,4 +428,15 @@ function MiniStat({ label, value, capitalize }: { label: string; value: string |
       <p className={`text-lg font-bold mt-0.5 ${capitalize ? "capitalize" : ""}`}>{value}</p>
     </div>
   );
+}
+
+function parsePlatformName(url: string): string {
+  if (url.includes("instagram.com")) return "instagram";
+  if (url.includes("tiktok.com")) return "tiktok";
+  if (url.includes("youtube.com")) return "youtube";
+  try {
+    return new URL(url).hostname.replace("www.", "").split(".")[0];
+  } catch {
+    return "other";
+  }
 }

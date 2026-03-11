@@ -101,6 +101,7 @@ export const briefings = pgTable('briefings', {
     .references(() => brands.id)
     .notNull(),
   contentBrief: text('content_brief').notNull(),
+  offerDescription: text('offer_description'),
   availabilityDays: jsonb('availability_days').$type<string[]>(),
   availabilityMeals: jsonb('availability_meals').$type<string[]>(),
   budgetHi: numeric('budget_hi', { precision: 10, scale: 2 }).notNull(),

@@ -78,6 +78,34 @@ export function calculatePayout(hi: number) {
   };
 }
 
-export async function calculateHIG(_creatorId: string): Promise<number> {
-  throw new Error("Not implemented: calculateHIG");
+export interface HIGData {
+  avgHi: number;
+  paidAssignments: number;
+  totalNonDeclinedAssignments: number;
+}
+
+export function calculateHIG(data: HIGData): number {
+  // HI performance (50%): avg HI normalized to 0-100 (cap at 20 HI = 100)
+  const hiScore = Math.min(100, (data.avgHi / 20) * 100);
+
+  // Reliability (20%): paid / total non-declined assignments
+  const reliability =
+    data.totalNonDeclinedAssignments > 0
+      ? (data.paidAssignments / data.totalNonDeclinedAssignments) * 100
+      : 0;
+
+  // Amplification (20%): stub at 50
+  const amplification = 50;
+
+  // Network (10%): stub at 50
+  const network = 50;
+
+  const score =
+    (hiScore * HIG_WEIGHTS.hiPerformance +
+      amplification * HIG_WEIGHTS.amplificationEffectiveness +
+      reliability * HIG_WEIGHTS.reliability +
+      network * HIG_WEIGHTS.networkContribution) /
+    100;
+
+  return Math.round(Math.min(100, Math.max(0, score)));
 }

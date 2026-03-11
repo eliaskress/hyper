@@ -21,14 +21,14 @@ export default async function AssignmentsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-1">Assignments</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight mb-1">Collabs</h1>
         <p className="text-gray-400 text-sm">Restaurant visits matched by Hyper.</p>
       </div>
 
       {/* Lifecycle explanation */}
       <div className="bg-gray-50 rounded-xl p-3 mb-6">
         <p className="text-xs text-gray-500 text-center">
-          Matched &rarr; Accepted &rarr; Scheduled &rarr; Posted &rarr; Measured &rarr; Paid
+          Invited &rarr; Locked in &rarr; Scheduled &rarr; Posted &rarr; Measured &rarr; Paid
         </p>
       </div>
 
@@ -70,7 +70,7 @@ export default async function AssignmentsPage() {
 
       {assignments.length === 0 && (
         <Card className="text-center py-10">
-          <p className="font-medium text-gray-900 mb-1">No assignments yet</p>
+          <p className="font-medium text-gray-900 mb-1">No collabs yet</p>
           <p className="text-sm text-gray-400">
             Hyper will match you with restaurants based on your HIG score and location.
           </p>
@@ -126,6 +126,11 @@ function AssignmentCard({ assignment: a }: { assignment: Awaited<ReturnType<type
           <StatusBadge status={a.status} />
         </div>
         <p className="text-sm text-gray-600 line-clamp-2 mb-2">{a.contentBrief}</p>
+        {a.offerDescription && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5 mb-2">
+            Includes: {a.offerDescription}
+          </p>
+        )}
 
         {/* Schedule info */}
         {a.scheduledDate && (

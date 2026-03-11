@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { users, brands, briefings, assignments, posts, payouts, badges } from "@/lib/db/schema";
-import { eq, desc, count, sum, sql, and } from "drizzle-orm";
+import { eq, desc, count, sum, avg, sql, and } from "drizzle-orm";
 
 // ── Creator Queries ─────────────────────────────────────────────────
 
@@ -17,6 +17,7 @@ export async function getCreatorAssignments(userId: string) {
       role: assignments.role,
       createdAt: assignments.createdAt,
       contentBrief: briefings.contentBrief,
+      offerDescription: briefings.offerDescription,
       businessName: brands.businessName,
       address: brands.address,
       verified: brands.verified,
@@ -243,6 +244,7 @@ export async function getBriefingReports(briefingId: string) {
       creatorHandle: users.handle,
       creatorAvatar: users.avatar,
       creatorFollowers: users.followersCount,
+      assignmentId: assignments.id,
       assignmentStatus: assignments.status,
     })
     .from(posts)
@@ -285,6 +287,7 @@ export async function getAssignmentDetail(assignmentId: string) {
       declineReason: assignments.declineReason,
       createdAt: assignments.createdAt,
       contentBrief: briefings.contentBrief,
+      offerDescription: briefings.offerDescription,
       availabilityDays: briefings.availabilityDays,
       availabilityMeals: briefings.availabilityMeals,
       businessName: brands.businessName,
@@ -317,6 +320,235 @@ export async function updateAssignmentStatus(
     .update(assignments)
     .set({ status })
     .where(eq(assignments.id, assignmentId))
+    .returning();
+  return updated ?? null;
+}
+
+// ── Briefing Mutations ────────────────────────────────────────────
+
+export async function createBriefing(data: {
+  brandId: string;
+  contentBrief: string;
+  offerDescription?: string;
+  availabilityDays: string[];
+  availabilityMeals: string[];
+  budgetHi: string;
+  budgetType: "per_engagement" | "monthly";
+}) {
+  const [created] = await db
+    .insert(briefings)
+    .values({
+      brandId: data.brandId,
+      contentBrief: data.contentBrief,
+      offerDescription: data.offerDescription ?? null,
+      availabilityDays: data.availabilityDays,
+      availabilityMeals: data.availabilityMeals,
+      budgetHi: data.budgetHi,
+      budgetTypeField: data.budgetType,
+      status: "active",
+    })
+    .returning();
+  return created;
+}
+
+export async function updateBriefing(
+  briefingId: string,
+  data: Partial<{
+    contentBrief: string;
+    offerDescription: string;
+    availabilityDays: string[];
+    availabilityMeals: string[];
+    budgetHi: string;
+    budgetType: "per_engagement" | "monthly";
+    status: "active" | "paused" | "completed";
+  }>,
+) {
+  const set: Record<string, unknown> = {};
+  if (data.contentBrief !== undefined) set.contentBrief = data.contentBrief;
+  if (data.offerDescription !== undefined) set.offerDescription = data.offerDescription;
+  if (data.availabilityDays !== undefined) set.availabilityDays = data.availabilityDays;
+  if (data.availabilityMeals !== undefined) set.availabilityMeals = data.availabilityMeals;
+  if (data.budgetHi !== undefined) set.budgetHi = data.budgetHi;
+  if (data.budgetType !== undefined) set.budgetTypeField = data.budgetType;
+  if (data.status !== undefined) set.status = data.status;
+
+  const [updated] = await db
+    .update(briefings)
+    .set(set)
+    .where(eq(briefings.id, briefingId))
+    .returning();
+  return updated ?? null;
+}
+
+// ── Post / Metrics Queries ────────────────────────────────────────
+
+export async function getPostByAssignmentId(assignmentId: string) {
+  const [post] = await db
+    .select()
+    .from(posts)
+    .where(eq(posts.assignmentId, assignmentId));
+  return post ?? null;
+}
+
+export async function updatePostMetrics(
+  postId: string,
+  metrics: { likes: number; comments: number; saves: number; shares: number; reach: number },
+  hiCalculated: string,
+) {
+  const [updated] = await db
+    .update(posts)
+    .set({
+      likes: metrics.likes,
+      comments: metrics.comments,
+      saves: metrics.saves,
+      shares: metrics.shares,
+      reach: metrics.reach,
+      hiCalculated,
+      measuredAt: new Date(),
+    })
+    .where(eq(posts.id, postId))
+    .returning();
+  return updated ?? null;
+}
+
+export async function updateBriefingHiDelivered(briefingId: string, hiToAdd: number) {
+  const briefing = await getBrandBriefing_byId(briefingId);
+  if (!briefing) return null;
+  const current = parseFloat(briefing.hiDelivered);
+  const [updated] = await db
+    .update(briefings)
+    .set({ hiDelivered: (current + hiToAdd).toFixed(2) })
+    .where(eq(briefings.id, briefingId))
+    .returning();
+  return updated ?? null;
+}
+
+async function getBrandBriefing_byId(briefingId: string) {
+  const [b] = await db.select().from(briefings).where(eq(briefings.id, briefingId));
+  return b ?? null;
+}
+
+// ── Payout Mutations ──────────────────────────────────────────────
+
+export async function createPayout(data: {
+  assignmentId: string;
+  amount: string;
+  hiAmount: string;
+}) {
+  const [created] = await db
+    .insert(payouts)
+    .values({
+      assignmentId: data.assignmentId,
+      amount: data.amount,
+      hiAmount: data.hiAmount,
+      status: "pending",
+    })
+    .returning();
+  return created;
+}
+
+export async function getPayoutByAssignmentId(assignmentId: string) {
+  const [payout] = await db
+    .select()
+    .from(payouts)
+    .where(eq(payouts.assignmentId, assignmentId));
+  return payout ?? null;
+}
+
+export async function updatePayoutStatus(
+  payoutId: string,
+  status: "paid" | "cancelled",
+  stripeTransferId?: string,
+) {
+  const set: Record<string, unknown> = { status };
+  if (status === "paid") set.paidAt = new Date();
+  if (stripeTransferId) set.stripeTransferId = stripeTransferId;
+
+  const [updated] = await db
+    .update(payouts)
+    .set(set)
+    .where(eq(payouts.id, payoutId))
+    .returning();
+  return updated ?? null;
+}
+
+// ── HIG Data ──────────────────────────────────────────────────────
+
+export async function getCreatorHIGData(userId: string) {
+  const [hiStats] = await db
+    .select({
+      avgHi: avg(posts.hiCalculated),
+    })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(and(eq(assignments.creatorId, userId), sql`${posts.hiCalculated} IS NOT NULL`));
+
+  const [assignmentStats] = await db
+    .select({
+      paid: count(sql`CASE WHEN ${assignments.status} = 'paid' THEN 1 END`),
+      total: count(sql`CASE WHEN ${assignments.status} != 'declined' THEN 1 END`),
+    })
+    .from(assignments)
+    .where(eq(assignments.creatorId, userId));
+
+  return {
+    avgHi: parseFloat(hiStats?.avgHi ?? "0"),
+    paidAssignments: assignmentStats?.paid ?? 0,
+    totalNonDeclinedAssignments: assignmentStats?.total ?? 0,
+  };
+}
+
+// ── Profile Updates ───────────────────────────────────────────────
+
+export async function updateCreatorProfile(
+  userId: string,
+  data: Partial<{
+    handle: string;
+    location: string;
+    primaryPlatform: string;
+    platforms: string[];
+  }>,
+) {
+  const set: Record<string, unknown> = {};
+  if (data.handle !== undefined) set.handle = data.handle;
+  if (data.location !== undefined) set.location = data.location;
+  if (data.primaryPlatform !== undefined) set.primaryPlatform = data.primaryPlatform;
+  if (data.platforms !== undefined) set.platforms = data.platforms;
+
+  const [updated] = await db
+    .update(users)
+    .set(set)
+    .where(eq(users.id, userId))
+    .returning();
+  return updated ?? null;
+}
+
+export async function updateBrandProfile(
+  brandId: string,
+  data: Partial<{
+    businessName: string;
+    address: string;
+    instagramHandle: string;
+  }>,
+) {
+  const set: Record<string, unknown> = {};
+  if (data.businessName !== undefined) set.businessName = data.businessName;
+  if (data.address !== undefined) set.address = data.address;
+  if (data.instagramHandle !== undefined) set.instagramHandle = data.instagramHandle;
+
+  const [updated] = await db
+    .update(brands)
+    .set(set)
+    .where(eq(brands.id, brandId))
+    .returning();
+  return updated ?? null;
+}
+
+export async function updateCreatorHIG(userId: string, higScore: number) {
+  const [updated] = await db
+    .update(users)
+    .set({ higScore })
+    .where(eq(users.id, userId))
     .returning();
   return updated ?? null;
 }

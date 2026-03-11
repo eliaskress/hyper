@@ -2,6 +2,7 @@ import { getBrandByUserId } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { WhatsAppIndicator } from "@/components/ui/whatsapp-preview";
 import { BrandProfileEdit } from "./profile-edit";
+import { BrandInfoEdit } from "./brand-info-edit";
 
 export const dynamic = "force-dynamic";
 
@@ -20,19 +21,13 @@ export default async function BrandProfile() {
 
       {/* Business Info */}
       <Card className="mb-4">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-xl font-bold text-gray-500">
-            {brand.businessName.charAt(0)}
-          </div>
-          <div>
-            <p className="text-lg font-bold">{brand.businessName}</p>
-            <p className="text-sm text-gray-500">{brand.address}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-3 pt-3 border-t border-gray-100">
-          <InfoRow label="Verified" value={brand.verified ? "Yes" : "Pending"} />
-          <InfoRow label="Member since" value={new Date(brand.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })} />
-        </div>
+        <BrandInfoEdit
+          brandId={brand.id}
+          currentName={brand.businessName}
+          currentAddress={brand.address ?? ""}
+          verified={brand.verified}
+          createdAt={brand.createdAt.toISOString()}
+        />
       </Card>
 
       {/* Instagram */}
@@ -84,15 +79,6 @@ export default async function BrandProfile() {
           </div>
         )}
       </Card>
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-center">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium">{value}</span>
     </div>
   );
 }

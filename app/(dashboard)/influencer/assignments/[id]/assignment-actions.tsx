@@ -36,12 +36,13 @@ export function AssignmentActions({ assignmentId, status: initialStatus, hasPost
       {status === "invited" && (
         <AcceptDecline assignmentId={assignmentId} onAccepted={() => setStatus("accepted")} />
       )}
-      {status === "accepted" && (
+      {(status === "accepted" || status === "scheduled") && (
         <ScheduleVisit
           assignmentId={assignmentId}
           availabilityDays={availabilityDays}
           availabilityMeals={availabilityMeals}
           onScheduled={() => setStatus("scheduled")}
+          isReschedule={status === "scheduled"}
         />
       )}
       {(status === "accepted" || (status === "scheduled" && !hasPost)) && (
@@ -109,7 +110,7 @@ function AcceptDecline({ assignmentId, onAccepted }: { assignmentId: string; onA
 
   return (
     <div className="rounded-xl border-2 border-gray-100 p-4">
-      <h3 className="text-sm font-semibold mb-3">Respond to invitation</h3>
+      <h3 className="text-sm font-semibold mb-3">Lock in this collab</h3>
 
       {!showDecline ? (
         <div className="flex gap-2">
@@ -166,11 +167,13 @@ function ScheduleVisit({
   availabilityDays,
   availabilityMeals,
   onScheduled,
+  isReschedule = false,
 }: {
   assignmentId: string;
   availabilityDays: string[];
   availabilityMeals: string[];
   onScheduled: () => void;
+  isReschedule?: boolean;
 }) {
   const [date, setDate] = useState("");
   const [meal, setMeal] = useState("");
@@ -236,7 +239,7 @@ function ScheduleVisit({
 
   return (
     <form onSubmit={handleSchedule} className="rounded-xl border-2 border-gray-100 p-4">
-      <h3 className="text-sm font-semibold mb-1">Schedule your visit</h3>
+      <h3 className="text-sm font-semibold mb-1">{isReschedule ? "Reschedule your visit" : "Schedule your visit"}</h3>
       <p className="text-xs text-gray-500 mb-3">
         Pick a day and mealtime from the restaurant&apos;s availability.
       </p>
@@ -297,7 +300,7 @@ function ScheduleVisit({
           disabled={loading}
           className="w-full rounded-xl bg-black text-white py-3 font-semibold text-sm hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-50 min-h-[44px]"
         >
-          {loading ? "Scheduling..." : "Confirm Schedule"}
+          {loading ? "Scheduling..." : isReschedule ? "Confirm Reschedule" : "Confirm Schedule"}
         </button>
       </div>
       {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
