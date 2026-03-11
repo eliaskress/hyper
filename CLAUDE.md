@@ -1,10 +1,16 @@
 # CLAUDE.md — Hyper
 
-## Project Overview
+## What Hyper Is
 
-Hyper converts influence into a quantifiable economic unit. Merchants (starting with restaurants) buy influence. Creators generate influence. AI agents allocate and measure influence. The long-term objective is to build the Influence Graph — mapping how influence propagates across creators, audiences, and merchants.
+Hyper is an AI-operated influence network that connects restaurants with local micro-creators for paid marketing campaigns. Creators post content about a restaurant, Hyper measures the impact using a proprietary metric called HI (Hyper Influence) — a weighted engagement formula combining reach and engagement signals — and everyone gets paid based on verified influence generated.
 
-Hyper launches with **restaurants** as the initial vertical. Creators onboard primarily via **WhatsApp** (QR codes at restaurants). The web dashboard serves as a secondary management interface.
+The primary interface is WhatsApp. Creators join through a WhatsApp onboarding flow, verify their social profiles, and manage campaigns conversationally. Restaurants onboard the same way. The web dashboard (this codebase) is the secondary management interface and admin view.
+
+A set of AI agents handle the operational workflow end-to-end: onboarding, campaign design, creator allocation, metrics extraction, reporting, and payout preparation. Deterministic code — not agents — handles financial logic: HI calculation, payout math, and referral eligibility.
+
+Hyper launches in **Los Angeles** with 20 restaurants and 50 creators. The goal is fast execution, clean data capture, reliable HI measurement, and a repeatable campaign flow.
+
+The long-term moat is the **Influence Graph** — a foundational dataset mapping how influence propagates across creators, audiences, and merchants.
 
 ---
 
@@ -12,15 +18,30 @@ Hyper launches with **restaurants** as the initial vertical. Creators onboard pr
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14+ (App Router) |
+| Framework | Next.js (App Router, React 19) |
 | Database | Neon DB (serverless Postgres) |
-| Auth | Auth.js v5 (Instagram, TikTok, YouTube OAuth) |
-| Hosting | Vercel (frontend/API), Google Cloud (AI agents, services) |
-| Version Control | GitHub |
 | ORM | Drizzle ORM |
+| Auth | Auth.js v5 (demo: Credentials provider; prod: Instagram/TikTok/YouTube OAuth) |
+| Hosting | Vercel (frontend/API) |
 | Payments | Stripe Connect |
-| Messaging | WhatsApp Business API |
+| Messaging | WhatsApp Business API (not yet implemented) |
 | AI | Claude (primary), ChatGPT (QA/fallback) |
+| CI | GitHub Actions (lint, type-check, npm audit) |
+
+---
+
+## Branching & Deployments
+
+| Branch | Environment | URL |
+|---|---|---|
+| `dev` | Staging | Vercel preview (auto-deploys on push) |
+| `main` | Production | Vercel production (protected, requires PR) |
+
+- `feature/[name]` and `fix/[name]` branch off `dev`
+- PRs always merge to `dev` first
+- `dev` → `main` is a deliberate release
+- Branch protection on `main`: require PR reviews, no direct pushes
+- Staging is password-gated (`hubster999`) via middleware
 
 ---
 
@@ -28,44 +49,46 @@ Hyper launches with **restaurants** as the initial vertical. Creators onboard pr
 
 ```
 hyper/
-├── app/                   # Next.js App Router
-│   ├── (auth)/            # Auth routes (login, callback)
-│   ├── (dashboard)/       # Protected routes
-│   │   ├── merchant/      # Merchant/restaurant-side views
-│   │   └── influencer/    # Creator-side views
-│   ├── api/               # API route handlers
-│   │   ├── auth/          # NextAuth handlers
-│   │   ├── campaigns/     # Campaign CRUD
-│   │   ├── applications/  # Application flow
-│   │   └── webhooks/      # Stripe, Instagram, WhatsApp webhooks
-│   └── layout.tsx
-├── components/            # Shared UI components
-│   ├── ui/                # Primitives (buttons, cards, etc.)
-│   ├── merchant/          # Merchant-specific components
-│   └── influencer/        # Creator-specific components
+├── app/
+│   ├── (auth)/login/           # Role selection (Creator / Restaurant)
+│   ├── (dashboard)/
+│   │   ├── brand/              # Restaurant dashboard
+│   │   │   ├── campaigns/      # Campaign list + detail + applicant review
+│   │   │   ├── applications/   # All applications across campaigns
+│   │   │   ├── applicant/[id]/ # Creator profile view (for review)
+│   │   │   ├── payouts/        # Payout tracking (stub)
+│   │   │   └── profile/        # Business profile (stub)
+│   │   └── influencer/         # Creator dashboard
+│   │       ├── browse/         # Campaign discovery + detail
+│   │       ├── applications/   # Application history
+│   │       ├── earnings/       # Payout history with statuses
+│   │       └── profile/        # Creator profile (info + Stripe tabs)
+│   ├── api/
+│   │   ├── applications/       # PATCH accept/reject applications
+│   │   ├── gate/               # Password gate authentication
+│   │   └── webhooks/           # Stripe, Instagram webhooks (stubs)
+│   └── gate/                   # Password entry page
+├── components/ui/              # Card, StatCard, StatusBadge, Button, BottomNav
 ├── lib/
-│   ├── db/                # Drizzle schema + queries
-│   ├── auth/              # Auth config
-│   ├── hi/                # HI calculation + HIG scoring
-│   ├── stripe/            # Stripe helpers
-│   ├── instagram/         # Instagram API helpers
-│   └── whatsapp/          # WhatsApp Business API helpers
-├── middleware.ts           # Auth + security middleware
-├── .env.local             # Local secrets (never committed)
-└── drizzle.config.ts
+│   ├── db/                     # Schema, queries, seed data
+│   ├── hi/                     # HI calculation, HIG scoring, revenue split
+│   ├── stripe/                 # Stripe Connect helpers (stubs)
+│   ├── instagram/              # Instagram API helpers (stubs)
+│   └── gamification/           # XP grants, badge checks (stubs)
+├── middleware.ts                # Password gate for staging
+├── drizzle.config.ts
+└── .env.local                  # Local secrets (never committed)
 ```
 
 ---
 
-## Core Metric — HI (Hyper Impact)
-
-HI measures the attention influence generated by content.
+## Core Metric — HI (Hyper Influence)
 
 ```
 HI = 100 × (L + 2C + 6S + 8SH) / R
 ```
 
-Where: L = Likes, C = Comments, S = Saves, SH = Shares, R = Reach (unique users who saw the post). Reach is measured **24 hours after posting**. If reach is missing, HI cannot be calculated.
+Where: L = Likes, C = Comments, S = Saves, SH = Shares, R = Reach (unique users, measured 24h after posting). If reach is missing, HI cannot be calculated.
 
 ### Pricing & Revenue Split
 
@@ -76,201 +99,158 @@ Where: L = Likes, C = Comments, S = Saves, SH = Shares, R = Reach (unique users 
 
 ### Amplification
 
-Creators can amplify other creators' campaign posts:
 - Amplifier reward: 30% of original HI
 - Max 5 amplifiers per post
 - Amplification cannot exceed 50% of creator's own HI in campaign
 
----
+### HIG (Hyper Influence Grade)
 
-## Authentication
+Creators are ranked 0–100, weighted by:
+- HI performance (50%)
+- Amplification effectiveness (20%)
+- Reliability (20%)
+- Network contribution (10%)
 
-- Auth is handled via **Auth.js v5** with OAuth providers for Instagram, TikTok, and YouTube
-- Sessions use **JWT strategy** (7-day expiry)
-- All `/dashboard` routes are protected by middleware
-- On first login, users select a role: **Merchant** or **Creator**
-- Role is stored in the database and locked after selection
-- Creators also onboard via **WhatsApp** (primary path for pilot)
-
-```ts
-// middleware.ts — protect all dashboard routes
-export { auth as middleware } from "@/auth";
-export const config = { matcher: ["/dashboard/:path*", "/api/campaigns/:path*"] }
-```
+Higher HIG = priority access to better campaigns.
 
 ---
 
-## Database (Neon)
+## Database Schema (Current)
 
-- Use **Drizzle ORM** for type-safe queries
-- All migrations tracked in `drizzle/migrations/`
-- Use **connection pooling** via Neon's built-in pooler (not direct connections in serverless)
-- Never expose raw DB credentials; use environment variables only
-
-### Key Tables
+6 tables, 6 enums. Schema defined in `lib/db/schema.ts`.
 
 ```
-users              — id, role, handle, avatar, hig_score, created_at
-restaurants        — id, user_id, name, location, instagram_handle, category, verified, stripe_account_id
-creators           — id, user_id, city, primary_platform, platform_links, phone
-campaigns          — id, restaurant_id, title, description, hi_target, budget_usd, status, deadline
-applications       — id, campaign_id, creator_id, allocated_hi, status, post_url, submitted_at
-posts              — id, application_id, platform, post_url, likes, comments, saves, shares, reach, hi_calculated
-payouts            — id, application_id, amount, stripe_transfer_id, paid_at
-hi_ledger          — id, campaign_id, creator_id, hi_amount, type (direct/amplification/network), created_at
-amplifications     — id, original_post_id, amplifier_id, hi_earned
-network_referrals  — id, referrer_id, referred_id, referrer_type, expires_at
-badges             — id, user_id, badge_type, earned_at
+users         — uuid PK, instagram_id, role, handle, avatar, followers_count, location, stripe_account_id, xp, tier
+brands        — uuid PK, user_id FK, business_name, address, verified, stripe_account_id
+campaigns     — uuid PK, brand_id FK, title, description, payout, status, deadline
+applications  — uuid PK, campaign_id FK, influencer_id FK, status, post_url, submitted_at
+payouts       — uuid PK, application_id FK, amount, status (pending/paid/cancelled), stripe_transfer_id, paid_at
+badges        — uuid PK, user_id FK, badge_type, earned_at
 ```
+
+Enums: `user_role`, `user_tier`, `campaign_status`, `application_status`, `payout_status`, `badge_type`
+
+**Note:** The PRD describes additional tables (posts, hi_ledger, amplifications, network_referrals, creators, restaurants) that are not yet implemented. Current schema supports the demo MVP.
 
 ---
 
-## Security Standards
+## Current State (Demo MVP)
 
-### Encryption
-- **TLS 1.2+ enforced** for all in-transit data
-- **Neon encrypts data at rest** by default (AES-256); confirm in Neon dashboard
-- All environment variables stored in hosting environment config, never in source
+### What works:
+- Password-gated landing page
+- Role selection → Creator or Restaurant dashboard
+- Creator: browse campaigns, view detail, see applications, earnings with payout statuses, full profile with IG/followers/Stripe tabs
+- Restaurant: view campaigns, review applicants with profile cards (followers, location, IG link), accept/decline applications via API
+- Seed data: 3 restaurants (LA locations), 3 creators, 8 campaigns, 10 applications, 5 payouts, 2 badges
+- Demo uses hardcoded user IDs (no real auth)
 
-### API Security
-- All API routes validate session server-side before any DB operation
-- Input validation with **Zod** on all request bodies
-- Rate limiting via Vercel's edge middleware or Upstash Ratelimit
-- CSRF protection enabled via Auth.js built-in handling
-- No sensitive data returned in API responses (no passwords, no tokens, no full card data)
+### What's stubbed:
+- Auth (Instagram/TikTok/YouTube OAuth)
+- Stripe Connect (payment collection + payouts)
+- Instagram API (profile/media fetch)
+- WhatsApp Business API
+- AI agent orchestration
+- Campaign creation form
+- HI measurement from real posts
+- Gamification (XP grants, badge checks)
 
-### OAuth Tokens
-- Never store OAuth access tokens in the client
-- Store encrypted tokens server-side in the DB (use `crypto` module or a secrets manager)
-- Scope requests to minimum required per platform
+---
 
-### Headers
-Set these in `next.config.ts`:
-```js
-headers: [
-  { key: "X-Frame-Options", value: "DENY" },
-  { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-]
-```
+## Authentication (Current)
 
-### GitHub Practices
-- Branch protection on `main`: require PR reviews, no direct pushes
-- Use GitHub Actions for CI: lint, type-check, test before merge
-- Use **GitHub Secrets** for all environment variables in CI/CD
-- Run `npm audit` in CI pipeline
-- Never commit `.env` files; `.env.local` is gitignored by default
+Auth is **disabled for demo mode**. The middleware only enforces the password gate.
+
+- `auth.ts` has a Credentials provider for dev (`demo-login`) but it's not used in the current flow
+- Login page uses direct `<Link>` navigation to `/influencer` and `/brand`
+- Pages use hardcoded demo IDs: creator `00000000-0000-0000-0000-000000000001`, brand `00000000-0000-0000-0000-000000000100`
+
+---
+
+## Security
+
+### Headers (next.config.ts)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+### API
+- Input validation with **Zod** on API request bodies
+- Consistent error shape: `{ error: string, code: string }`
+- Password gate cookie: httpOnly, secure in production, 30-day expiry
+
+### GitHub
+- CI on push/PR: lint, type-check, npm audit
+- `.env.local` gitignored
+- Environment variables in Vercel dashboard for deployments
 
 ---
 
 ## Environment Variables
 
 ```bash
-# Auth
+# Neon DB
+DATABASE_URL=           # pooled connection (app runtime)
+DATABASE_URL_UNPOOLED=  # direct connection (migrations only)
+
+# Auth (not active in demo)
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=
 
-# Instagram OAuth
-INSTAGRAM_CLIENT_ID=
-INSTAGRAM_CLIENT_SECRET=
-
-# TikTok OAuth
-TIKTOK_CLIENT_KEY=
-TIKTOK_CLIENT_SECRET=
-
-# YouTube/Google OAuth
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# Neon DB
-DATABASE_URL=           # pooled connection
-DATABASE_URL_UNPOOLED=  # direct for migrations only
-
-# Stripe
+# Stripe (not active in demo)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-
-# WhatsApp Business API
-WHATSAPP_API_TOKEN=
-WHATSAPP_PHONE_NUMBER_ID=
-WHATSAPP_VERIFY_TOKEN=
 ```
 
 ---
 
-## Development Workflow
+## Development
 
 ```bash
-# Install
-npm install
-
-# Run locally
-npm run dev
-
-# Type check
-npm run type-check
-
-# Lint
-npm run lint
-
-# DB migrations
-npx drizzle-kit generate
-npx drizzle-kit migrate
+npm install          # install deps
+npm run dev          # local dev server
+npm run lint         # eslint
+npm run type-check   # tsc --noEmit
+npm run db:seed      # seed demo data (needs DATABASE_URL)
+npm run db:generate  # generate drizzle migrations
+npm run db:migrate   # run migrations (needs DATABASE_URL_UNPOOLED)
+npm run db:studio    # drizzle studio GUI
 ```
 
-### Branch Strategy
-- `main` — production only, protected
-- `dev` — integration branch
-- `feature/[name]` — individual features
-- `fix/[name]` — bug fixes
-
-PRs always merge to `dev` first. `dev` → `main` is a deliberate release.
+Seed script requires `DATABASE_URL` passed inline:
+```bash
+DATABASE_URL="postgresql://..." npx tsx lib/db/seed.ts
+```
 
 ---
 
-## Payments (Stripe Connect)
+## AI Agent Architecture (Planned)
 
-- Merchants pay into Hyper's Stripe account (campaign budget = HI target × $10/HI)
-- Creators onboard via **Stripe Connect Express** for payouts
-- Revenue split: 40% Hyper / 40% Creator / 20% Network (defined in `lib/hi/index.ts`)
-- Escrow pattern: funds held until creator post is verified and HI calculated, then released
-
----
-
-## AI Agent Architecture
-
-Hyper operations are orchestrated by 8 AI agents (see PRD for full specs):
+8 agents orchestrate Hyper operations (see PRD for full specs):
 
 1. **Creator Onboarding Agent** — WhatsApp-based creator signup
 2. **Restaurant Onboarding Agent** — WhatsApp-based merchant signup
-3. **Campaign Architect Agent** — structures campaign proposals from merchant requests
+3. **Campaign Architect Agent** — structures campaign proposals
 4. **Campaign Allocation Agent** — allocates HI across creators by HIG score
-5. **Creator Operations Agent** — sends invitations, collects post links, requests screenshots
+5. **Creator Operations Agent** — sends invitations, collects post links
 6. **Metrics Extraction Agent** — parses analytics screenshots for HI inputs
 7. **Reporting Agent** — generates WhatsApp-ready campaign summaries
 8. **Payout & Ledger Agent** — prepares payout breakdowns
 
-Agents are the orchestration/extraction/messaging layer. **Deterministic code** handles: database writes, HI formula execution, payout calculations, referral eligibility, campaign status.
+Agents handle orchestration/extraction/messaging. **Deterministic code** handles: HI formula, payout math, referral eligibility, campaign status transitions.
 
 ---
 
-## Error Handling
+## Voice & Design
 
-- Use `try/catch` in all API routes
-- Return consistent error shapes: `{ error: string, code: string }`
-- Log errors server-side (never expose stack traces to client)
-- Use Sentry or Vercel's built-in error tracking in production
-
----
-
-## Testing
-
-- Unit tests: **Vitest**
-- Integration tests: **Playwright** for critical flows (signup, campaign creation, payout)
-- Test files colocated: `component.test.ts` next to `component.ts`
-- CI runs all tests on PR
+- Direct, warm, action-oriented — no corporate fluff, no fake urgency
+- Gamification = recognition, not manipulation: real milestones, no streaks or leaderboards
+- Every screen has one job. Progress is always visible.
+- Mobile-first, built for someone with 90 seconds between other things
+- Use "restaurant" or "merchant" for the business side, "creator" for the influencer side
+- See `SOUL.md` for full brand voice guidelines
+- See `DESIGN_PRINCIPLES.md` for UX principles
 
 ---
 
@@ -278,11 +258,8 @@ Agents are the orchestration/extraction/messaging layer. **Deterministic code** 
 
 **IMPORTANT: Never read, search, or modify files outside of the `C:\Users\shuya\hyper\` directory. All work is scoped strictly to this project.**
 
-When working in this codebase:
 - Always use the App Router pattern (no `pages/` directory)
 - Prefer server components by default; use `"use client"` only when necessary
 - Database queries belong in `lib/db/queries/`, never inline in components
-- All user-facing strings should be friendly and on-brand (see `SOUL.md`)
 - HI calculation and HIG scoring live in `lib/hi/` — deterministic, never agent-computed
-- Use "merchant" or "restaurant" for the business side, "creator" for the influencer side
-- When in doubt, keep it simple. Hyper's north star is ease of use.
+- Keep it simple. Hyper's north star is ease of use.

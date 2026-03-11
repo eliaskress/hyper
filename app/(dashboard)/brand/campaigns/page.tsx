@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { getBrandCampaigns } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";

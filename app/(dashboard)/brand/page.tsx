@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getBrandStats, getBrandCampaigns } from "@/lib/db/queries";
 import { Card, StatCard } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";

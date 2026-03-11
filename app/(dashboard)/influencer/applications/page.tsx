@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getCreatorApplications } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getCreatorProfile, getCreatorStats } from "@/lib/db/queries";
 import { ProfileTabs } from "./profile-tabs";
 
