@@ -41,8 +41,8 @@ const config: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
       const isOnApi =
-        nextUrl.pathname.startsWith("/api/campaigns") ||
-        nextUrl.pathname.startsWith("/api/applications");
+        nextUrl.pathname.startsWith("/api/assignments") ||
+        nextUrl.pathname.startsWith("/api/briefings");
 
       if (isOnDashboard || isOnApi) {
         if (isLoggedIn) return true;

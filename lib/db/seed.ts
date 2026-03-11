@@ -6,13 +6,14 @@ const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql, { schema });
 
 async function seed() {
-  console.log("Seeding database...");
+  console.log("Seeding database (Engine model)...");
 
   // Clean existing data (reverse FK order)
   await db.delete(schema.badges);
   await db.delete(schema.payouts);
-  await db.delete(schema.applications);
-  await db.delete(schema.campaigns);
+  await db.delete(schema.posts);
+  await db.delete(schema.assignments);
+  await db.delete(schema.briefings);
   await db.delete(schema.brands);
   await db.delete(schema.users);
 
@@ -30,6 +31,9 @@ async function seed() {
       stripeAccountId: null,
       xp: 320,
       tier: "rising",
+      higScore: 72,
+      primaryPlatform: "instagram",
+      platforms: ["https://instagram.com/maria.santos", "https://tiktok.com/@maria.santos"],
     })
     .returning();
 
@@ -45,6 +49,9 @@ async function seed() {
       location: "Silver Lake, CA",
       xp: 150,
       tier: "rising",
+      higScore: 58,
+      primaryPlatform: "instagram",
+      platforms: ["https://instagram.com/jake.eats.la"],
     })
     .returning();
 
@@ -60,6 +67,9 @@ async function seed() {
       location: "Santa Monica, CA",
       xp: 45,
       tier: "starter",
+      higScore: 41,
+      primaryPlatform: "instagram",
+      platforms: ["https://instagram.com/sofia.bites", "https://youtube.com/@sofiabites"],
     })
     .returning();
 
@@ -111,6 +121,7 @@ async function seed() {
       businessName: "Bacio di Latte",
       address: "8906 Melrose Ave, West Hollywood, CA 90069",
       verified: true,
+      whatsappConnected: true,
     })
     .returning();
 
@@ -122,6 +133,7 @@ async function seed() {
       businessName: "Taqueria Sunrise",
       address: "3101 W Sunset Blvd, Silver Lake, CA 90029",
       verified: true,
+      whatsappConnected: true,
     })
     .returning();
 
@@ -133,270 +145,274 @@ async function seed() {
       businessName: "Sakura Ramen House",
       address: "1234 Sawtelle Blvd, Los Angeles, CA 90025",
       verified: false,
+      whatsappConnected: false,
     })
     .returning();
 
-  // ── Campaigns ─────────────────────────────────────────────────────
+  // ── Briefings (one per restaurant) ────────────────────────────────
+  const [briefing1] = await db
+    .insert(schema.briefings)
+    .values({
+      id: "00000000-0000-0000-0000-000000003001",
+      brandId: bacio.id,
+      contentBrief: "Post a Reel or Story featuring our gelato. Show the vibe — outdoor seating, friends, golden hour. Tag @baciodilatte.",
+      availabilityDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      availabilityMeals: ["lunch", "dinner"],
+      budgetHi: "50.00",
+      budgetTypeField: "monthly",
+      status: "active",
+      hiDelivered: "18.40",
+    })
+    .returning();
+
+  const [briefing2] = await db
+    .insert(schema.briefings)
+    .values({
+      id: "00000000-0000-0000-0000-000000003002",
+      brandId: taqueria.id,
+      contentBrief: "Grab our signature Al Pastor tacos and post about it. Authentic vibes only — no scripted content. Show what makes our tacos worth the trip.",
+      availabilityDays: ["tuesday", "thursday", "friday", "saturday"],
+      availabilityMeals: ["lunch", "dinner"],
+      budgetHi: "30.00",
+      budgetTypeField: "per_engagement",
+      status: "active",
+      hiDelivered: "12.60",
+    })
+    .returning();
+
+  const [briefing3] = await db
+    .insert(schema.briefings)
+    .values({
+      id: "00000000-0000-0000-0000-000000003003",
+      brandId: sakura.id,
+      contentBrief: "Bring someone special, order the tonkotsu, and capture the moment. Cozy, real, delicious content. Story or Reel, your choice.",
+      availabilityDays: ["friday", "saturday", "sunday"],
+      availabilityMeals: ["dinner"],
+      budgetHi: "20.00",
+      budgetTypeField: "per_engagement",
+      status: "active",
+      hiDelivered: "0",
+    })
+    .returning();
+
+  // ── Assignments (Hyper-assigned, not creator-initiated) ───────────
   const now = new Date();
-  const inOneWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const inTwoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const inThreeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const inFiveDays = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
   const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
-  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [campaign1] = await db
-    .insert(schema.campaigns)
+  // Maria — paid assignment for Bacio (completed full cycle)
+  const [assignment1] = await db
+    .insert(schema.assignments)
     .values({
-      id: "00000000-0000-0000-0000-000000001001",
-      brandId: bacio.id,
-      title: "Summer Gelato Launch",
-      description: "Post a Reel or Story featuring our new summer gelato flavors. Tag @baciodilatte and use #BacioSummer. Show the vibe — outdoor seating, friends, golden hour.",
-      payout: "120.00",
-      status: "active",
-      deadline: inOneWeek,
+      id: "00000000-0000-0000-0000-000000004001",
+      briefingId: briefing1.id,
+      creatorId: creatorUser.id,
+      status: "paid",
+      allocatedHi: "8.50",
+      scheduledDate: twoWeeksAgo,
+      scheduleTypeField: "flexible",
+      scheduleTimeStart: "12:00",
+      scheduleTimeEnd: "15:00",
+      role: "originator",
     })
     .returning();
 
-  const [campaign2] = await db
-    .insert(schema.campaigns)
+  // Maria — measured assignment for Taqueria (awaiting payout)
+  const [assignment2] = await db
+    .insert(schema.assignments)
     .values({
-      id: "00000000-0000-0000-0000-000000001002",
-      brandId: taqueria.id,
-      title: "Taco Tuesday Spotlight",
-      description: "Come in on Tuesday, grab our signature Al Pastor tacos, and post about it. Authentic vibes only — no scripted content. Just show people what makes our tacos worth the trip.",
-      payout: "75.00",
-      status: "active",
-      deadline: inTwoWeeks,
+      id: "00000000-0000-0000-0000-000000004002",
+      briefingId: briefing2.id,
+      creatorId: creatorUser.id,
+      status: "measured",
+      allocatedHi: "6.00",
+      scheduledDate: fiveDaysAgo,
+      scheduleTypeField: "fixed",
+      scheduleTimeStart: "18:00",
+      scheduleTimeEnd: "19:00",
+      role: "originator",
     })
     .returning();
 
-  const [campaign3] = await db
-    .insert(schema.campaigns)
+  // Maria — scheduled upcoming visit for Bacio
+  const [assignment3] = await db
+    .insert(schema.assignments)
     .values({
-      id: "00000000-0000-0000-0000-000000001003",
-      brandId: sakura.id,
-      title: "Ramen Date Night",
-      description: "Bring someone special, order the tonkotsu, and capture the moment. We want cozy, real, delicious content. Story or Reel, your choice.",
-      payout: "90.00",
-      status: "active",
-      deadline: inOneWeek,
+      id: "00000000-0000-0000-0000-000000004003",
+      briefingId: briefing1.id,
+      creatorId: creatorUser.id,
+      status: "scheduled",
+      allocatedHi: "8.00",
+      scheduledDate: inThreeDays,
+      scheduleTypeField: "flexible",
+      scheduleTimeStart: "11:00",
+      scheduleTimeEnd: "14:00",
+      role: "originator",
     })
     .returning();
 
-  const [campaign4] = await db
-    .insert(schema.campaigns)
+  // Jake — accepted assignment for Bacio (needs to schedule)
+  const [assignment4] = await db
+    .insert(schema.assignments)
     .values({
-      id: "00000000-0000-0000-0000-000000001004",
-      brandId: bacio.id,
-      title: "Weekend Brunch Feature",
-      description: "Visit us Saturday or Sunday morning. Capture the brunch menu, the coffee, the atmosphere. This is about making people wish they were here.",
-      payout: "60.00",
-      status: "completed",
-      deadline: twoDaysAgo,
+      id: "00000000-0000-0000-0000-000000004004",
+      briefingId: briefing1.id,
+      creatorId: creator2.id,
+      status: "accepted",
+      allocatedHi: "5.50",
+      role: "originator",
     })
     .returning();
 
-  // Past completed campaigns for Maria's earnings history
-  const [campaign5] = await db
-    .insert(schema.campaigns)
+  // Jake — paid assignment for Taqueria
+  const [assignment5] = await db
+    .insert(schema.assignments)
     .values({
-      id: "00000000-0000-0000-0000-000000001005",
-      brandId: taqueria.id,
-      title: "Happy Hour Promo",
-      description: "Come try our new happy hour menu and post about the experience.",
-      payout: "85.00",
-      status: "completed",
-      deadline: oneWeekAgo,
+      id: "00000000-0000-0000-0000-000000004005",
+      briefingId: briefing2.id,
+      creatorId: creator2.id,
+      status: "paid",
+      allocatedHi: "6.60",
+      scheduledDate: oneWeekAgo,
+      scheduleTypeField: "fixed",
+      scheduleTimeStart: "12:30",
+      scheduleTimeEnd: "13:30",
+      role: "originator",
     })
     .returning();
 
-  const [campaign6] = await db
-    .insert(schema.campaigns)
-    .values({
-      id: "00000000-0000-0000-0000-000000001006",
-      brandId: sakura.id,
-      title: "Lunch Special Feature",
-      description: "Showcase our $12 bento lunch special to your followers.",
-      payout: "50.00",
-      status: "completed",
-      deadline: twoWeeksAgo,
-    })
-    .returning();
-
-  const [campaign7] = await db
-    .insert(schema.campaigns)
-    .values({
-      id: "00000000-0000-0000-0000-000000001007",
-      brandId: bacio.id,
-      title: "Valentine Dessert Drop",
-      description: "Feature our limited-edition Valentine dessert collection.",
-      payout: "150.00",
-      status: "completed",
-      deadline: threeWeeksAgo,
-    })
-    .returning();
-
-  const [campaign8] = await db
-    .insert(schema.campaigns)
-    .values({
-      id: "00000000-0000-0000-0000-000000001008",
-      brandId: taqueria.id,
-      title: "Grand Opening Weekend",
-      description: "Help us launch our second location with some buzz.",
-      payout: "200.00",
-      status: "completed",
-      deadline: oneMonthAgo,
-    })
-    .returning();
-
-  // ── Applications ──────────────────────────────────────────────────
-  // Maria applied and was accepted for campaign1
-  await db.insert(schema.applications).values({
-    id: "00000000-0000-0000-0000-000000002001",
-    campaignId: campaign1.id,
-    influencerId: creatorUser.id,
-    status: "accepted",
+  // Sofia — invited for Sakura (hasn't accepted yet)
+  await db.insert(schema.assignments).values({
+    id: "00000000-0000-0000-0000-000000004006",
+    briefingId: briefing3.id,
+    creatorId: creator3.id,
+    status: "invited",
+    allocatedHi: "7.00",
+    role: "originator",
   });
 
-  // Maria applied for campaign2 (still pending)
-  await db.insert(schema.applications).values({
-    id: "00000000-0000-0000-0000-000000002010",
-    campaignId: campaign2.id,
-    influencerId: creatorUser.id,
-    status: "applied",
+  // Sofia — posted for Bacio (awaiting measurement)
+  const [assignment7] = await db
+    .insert(schema.assignments)
+    .values({
+      id: "00000000-0000-0000-0000-000000004007",
+      briefingId: briefing1.id,
+      creatorId: creator3.id,
+      status: "posted",
+      allocatedHi: "9.00",
+      scheduledDate: twoDaysAgo,
+      scheduleTypeField: "flexible",
+      scheduleTimeStart: "17:00",
+      scheduleTimeEnd: "20:00",
+      role: "originator",
+    })
+    .returning();
+
+  // Maria — invited for Sakura
+  await db.insert(schema.assignments).values({
+    id: "00000000-0000-0000-0000-000000004008",
+    briefingId: briefing3.id,
+    creatorId: creatorUser.id,
+    status: "invited",
+    allocatedHi: "6.00",
+    role: "originator",
   });
 
-  // Jake applied for campaign2
-  await db.insert(schema.applications).values({
-    id: "00000000-0000-0000-0000-000000002002",
-    campaignId: campaign2.id,
-    influencerId: creator2.id,
-    status: "applied",
+  // ── Posts (for completed/measured assignments) ────────────────────
+  // Maria's post for Bacio (measured + paid)
+  await db.insert(schema.posts).values({
+    assignmentId: assignment1.id,
+    platform: "instagram",
+    postUrl: "https://instagram.com/p/demo_maria_bacio_1",
+    likes: 2840,
+    comments: 187,
+    saves: 94,
+    shares: 42,
+    reach: 18200,
+    hiCalculated: "9.90",
+    postedAt: twoWeeksAgo,
+    measuredAt: new Date(twoWeeksAgo.getTime() + 24 * 60 * 60 * 1000),
   });
 
-  // Maria completed campaign4 and got paid
-  const [paidApp] = await db
-    .insert(schema.applications)
-    .values({
-      id: "00000000-0000-0000-0000-000000002003",
-      campaignId: campaign4.id,
-      influencerId: creatorUser.id,
-      status: "paid",
-      postUrl: "https://instagram.com/p/demo_post_123",
-    })
-    .returning();
-
-  // Sofia applied for campaign3
-  await db.insert(schema.applications).values({
-    id: "00000000-0000-0000-0000-000000002004",
-    campaignId: campaign3.id,
-    influencerId: creator3.id,
-    status: "applied",
+  // Maria's post for Taqueria (measured, awaiting payout)
+  await db.insert(schema.posts).values({
+    assignmentId: assignment2.id,
+    platform: "instagram",
+    postUrl: "https://instagram.com/p/demo_maria_taqueria_1",
+    likes: 1650,
+    comments: 98,
+    saves: 56,
+    shares: 31,
+    reach: 12400,
+    hiCalculated: "8.50",
+    postedAt: fiveDaysAgo,
+    measuredAt: new Date(fiveDaysAgo.getTime() + 24 * 60 * 60 * 1000),
   });
 
-  // Jake applied for campaign1 too
-  await db.insert(schema.applications).values({
-    id: "00000000-0000-0000-0000-000000002005",
-    campaignId: campaign1.id,
-    influencerId: creator2.id,
-    status: "applied",
+  // Jake's post for Taqueria (measured + paid)
+  await db.insert(schema.posts).values({
+    assignmentId: assignment5.id,
+    platform: "instagram",
+    postUrl: "https://instagram.com/p/demo_jake_taqueria_1",
+    likes: 1120,
+    comments: 65,
+    saves: 38,
+    shares: 22,
+    reach: 9800,
+    hiCalculated: "6.60",
+    postedAt: oneWeekAgo,
+    measuredAt: new Date(oneWeekAgo.getTime() + 24 * 60 * 60 * 1000),
   });
 
-  // Maria completed campaign5 (Happy Hour Promo)
-  const [paidApp2] = await db
-    .insert(schema.applications)
-    .values({
-      id: "00000000-0000-0000-0000-000000002006",
-      campaignId: campaign5.id,
-      influencerId: creatorUser.id,
-      status: "paid",
-      postUrl: "https://instagram.com/p/demo_post_happy_hour",
-      submittedAt: oneWeekAgo,
-    })
-    .returning();
-
-  // Maria completed campaign6 (Lunch Special)
-  const [paidApp3] = await db
-    .insert(schema.applications)
-    .values({
-      id: "00000000-0000-0000-0000-000000002007",
-      campaignId: campaign6.id,
-      influencerId: creatorUser.id,
-      status: "paid",
-      postUrl: "https://instagram.com/p/demo_post_bento",
-      submittedAt: twoWeeksAgo,
-    })
-    .returning();
-
-  // Maria completed campaign7 (Valentine Dessert)
-  const [paidApp4] = await db
-    .insert(schema.applications)
-    .values({
-      id: "00000000-0000-0000-0000-000000002008",
-      campaignId: campaign7.id,
-      influencerId: creatorUser.id,
-      status: "paid",
-      postUrl: "https://instagram.com/p/demo_post_valentine",
-      submittedAt: threeWeeksAgo,
-    })
-    .returning();
-
-  // Maria completed campaign8 (Grand Opening)
-  const [paidApp5] = await db
-    .insert(schema.applications)
-    .values({
-      id: "00000000-0000-0000-0000-000000002009",
-      campaignId: campaign8.id,
-      influencerId: creatorUser.id,
-      status: "paid",
-      postUrl: "https://instagram.com/p/demo_post_opening",
-      submittedAt: oneMonthAgo,
-    })
-    .returning();
+  // Sofia's post for Bacio (posted, not yet measured)
+  await db.insert(schema.posts).values({
+    assignmentId: assignment7.id,
+    platform: "instagram",
+    postUrl: "https://instagram.com/p/demo_sofia_bacio_1",
+    likes: null,
+    comments: null,
+    saves: null,
+    shares: null,
+    reach: null,
+    hiCalculated: null,
+    postedAt: twoDaysAgo,
+    measuredAt: null,
+  });
 
   // ── Payouts ───────────────────────────────────────────────────────
-  // Pending payout (most recent — waiting for Stripe transfer)
+  // Maria paid for Bacio assignment (9.90 HI × $4/HI creator share = $39.60)
   await db.insert(schema.payouts).values({
-    applicationId: paidApp.id,
-    amount: "60.00",
+    assignmentId: assignment1.id,
+    amount: "39.60",
+    hiAmount: "9.90",
+    status: "paid",
+    stripeTransferId: "tr_demo_001",
+    paidAt: new Date(twoWeeksAgo.getTime() + 2 * 24 * 60 * 60 * 1000),
+  });
+
+  // Maria pending payout for Taqueria (8.50 HI × $4 = $34.00)
+  await db.insert(schema.payouts).values({
+    assignmentId: assignment2.id,
+    amount: "34.00",
+    hiAmount: "8.50",
     status: "pending",
     stripeTransferId: null,
     paidAt: null,
   });
 
-  // Paid payouts
+  // Jake paid for Taqueria (6.60 HI × $4 = $26.40)
   await db.insert(schema.payouts).values({
-    applicationId: paidApp2.id,
-    amount: "85.00",
+    assignmentId: assignment5.id,
+    amount: "26.40",
+    hiAmount: "6.60",
     status: "paid",
     stripeTransferId: "tr_demo_002",
-    paidAt: oneWeekAgo,
-  });
-
-  await db.insert(schema.payouts).values({
-    applicationId: paidApp3.id,
-    amount: "50.00",
-    status: "paid",
-    stripeTransferId: "tr_demo_003",
-    paidAt: twoWeeksAgo,
-  });
-
-  await db.insert(schema.payouts).values({
-    applicationId: paidApp4.id,
-    amount: "150.00",
-    status: "paid",
-    stripeTransferId: "tr_demo_004",
-    paidAt: threeWeeksAgo,
-  });
-
-  await db.insert(schema.payouts).values({
-    applicationId: paidApp5.id,
-    amount: "200.00",
-    status: "paid",
-    stripeTransferId: "tr_demo_005",
-    paidAt: oneMonthAgo,
+    paidAt: new Date(oneWeekAgo.getTime() + 2 * 24 * 60 * 60 * 1000),
   });
 
   // ── Badges ────────────────────────────────────────────────────────
@@ -406,17 +422,23 @@ async function seed() {
   });
 
   await db.insert(schema.badges).values({
+    userId: creatorUser.id,
+    badgeType: "on_time_creator",
+  });
+
+  await db.insert(schema.badges).values({
     userId: brandUser.id,
     badgeType: "fast_responder",
   });
 
-  console.log("Seed complete!");
+  console.log("Seed complete (Engine model)!");
   console.log("  - 6 users (3 creators, 3 restaurants)");
-  console.log("  - 3 restaurants");
-  console.log("  - 8 campaigns (3 active, 5 completed)");
-  console.log("  - 9 applications");
-  console.log("  - 5 payouts (Maria earned $545 total)");
-  console.log("  - 2 badges");
+  console.log("  - 3 restaurants (2 WhatsApp connected)");
+  console.log("  - 3 briefings (one per restaurant)");
+  console.log("  - 8 assignments (various lifecycle stages)");
+  console.log("  - 4 posts (with real HI metrics)");
+  console.log("  - 3 payouts (HI-based, 40% creator share)");
+  console.log("  - 3 badges");
 }
 
 seed().catch(console.error);

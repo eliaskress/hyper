@@ -2,47 +2,56 @@ import { relations } from 'drizzle-orm';
 import {
   users,
   brands,
-  campaigns,
-  applications,
+  briefings,
+  assignments,
+  posts,
   payouts,
   badges,
 } from './schema';
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   brand: one(brands, { fields: [users.id], references: [brands.userId] }),
-  applications: many(applications),
+  assignments: many(assignments),
   badges: many(badges),
 }));
 
 export const brandsRelations = relations(brands, ({ one, many }) => ({
   user: one(users, { fields: [brands.userId], references: [users.id] }),
-  campaigns: many(campaigns),
+  briefings: many(briefings),
 }));
 
-export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
-  brand: one(brands, { fields: [campaigns.brandId], references: [brands.id] }),
-  applications: many(applications),
+export const briefingsRelations = relations(briefings, ({ one, many }) => ({
+  brand: one(brands, { fields: [briefings.brandId], references: [brands.id] }),
+  assignments: many(assignments),
 }));
 
-export const applicationsRelations = relations(applications, ({ one }) => ({
-  campaign: one(campaigns, {
-    fields: [applications.campaignId],
-    references: [campaigns.id],
+export const assignmentsRelations = relations(assignments, ({ one, many }) => ({
+  briefing: one(briefings, {
+    fields: [assignments.briefingId],
+    references: [briefings.id],
   }),
-  influencer: one(users, {
-    fields: [applications.influencerId],
+  creator: one(users, {
+    fields: [assignments.creatorId],
     references: [users.id],
   }),
+  posts: many(posts),
   payout: one(payouts, {
-    fields: [applications.id],
-    references: [payouts.applicationId],
+    fields: [assignments.id],
+    references: [payouts.assignmentId],
+  }),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  assignment: one(assignments, {
+    fields: [posts.assignmentId],
+    references: [assignments.id],
   }),
 }));
 
 export const payoutsRelations = relations(payouts, ({ one }) => ({
-  application: one(applications, {
-    fields: [payouts.applicationId],
-    references: [applications.id],
+  assignment: one(assignments, {
+    fields: [payouts.assignmentId],
+    references: [assignments.id],
   }),
 }));
 

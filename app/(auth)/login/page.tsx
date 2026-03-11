@@ -5,7 +5,7 @@ export default function LoginPage() {
     <div className="w-full max-w-sm text-center">
       <h1 className="text-4xl font-extrabold tracking-tight mb-2">Hyper</h1>
       <p className="text-gray-500 mb-10">
-        Choose how you want to explore.
+        The AI-operated influence engine.
       </p>
       <div className="flex flex-col gap-3">
         <Link
@@ -17,7 +17,7 @@ export default function LoginPage() {
             <span className="text-gray-300 group-hover:text-black group-hover:translate-x-1 transition-all duration-200 text-xl">&rarr;</span>
           </div>
           <span className="text-gray-500 text-sm leading-relaxed">
-            Browse campaigns, create content, get paid.
+            Get matched with restaurants, create content, earn based on your influence.
           </span>
         </Link>
         <Link
@@ -29,7 +29,7 @@ export default function LoginPage() {
             <span className="text-gray-300 group-hover:text-black group-hover:translate-x-1 transition-all duration-200 text-xl">&rarr;</span>
           </div>
           <span className="text-gray-500 text-sm leading-relaxed">
-            Post campaigns, find local creators, grow your brand.
+            Submit a briefing, Hyper handles the rest — matching, scheduling, measurement, reporting.
           </span>
         </Link>
       </div>

@@ -6,8 +6,8 @@ const GATE_TOKEN = "hubster999";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow the gate page and gate API through
-  if (pathname === "/gate" || pathname === "/api/gate") {
+  // Allow the gate page, all API routes, and auth through
+  if (pathname === "/gate" || pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 

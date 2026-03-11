@@ -10,7 +10,7 @@
  *   SH = Shares
  *   R  = Reach (unique users who saw the post)
  *
- * Reach is measured 24 hours after posting.
+ * Reach is measured 7 days after posting.
  * If reach is missing, HI cannot be calculated.
  */
 

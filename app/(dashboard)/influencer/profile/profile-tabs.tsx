@@ -15,14 +15,18 @@ interface Profile {
   stripeAccountId: string | null;
   xp: number;
   tier: string;
+  higScore: number;
+  primaryPlatform: string | null;
+  platforms: string[] | null;
   createdAt: Date;
 }
 
 interface Stats {
-  totalApplications: number;
-  acceptedCampaigns: number;
-  completedCampaigns: number;
+  totalAssignments: number;
+  activeAssignments: number;
+  completedAssignments: number;
   totalEarned: string;
+  totalHi: string;
   badges: { id: string; badgeType: string }[];
 }
 
@@ -79,6 +83,30 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
         </div>
       </div>
 
+      {/* HIG Score */}
+      <Card>
+        <h2 className="font-bold mb-3">HIG Score</h2>
+        <div className="flex items-center gap-4">
+          <div className="relative w-16 h-16">
+            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f3f4f6" strokeWidth="3" />
+              <circle
+                cx="18" cy="18" r="15.9" fill="none" stroke="black" strokeWidth="3"
+                strokeDasharray={`${profile.higScore} ${100 - profile.higScore}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold">
+              {profile.higScore}
+            </span>
+          </div>
+          <div className="text-sm text-gray-600">
+            <p>Your Hyper Influence Grade determines which restaurants you&apos;re matched with.</p>
+            <p className="text-xs text-gray-400 mt-1">Higher HIG = better assignments</p>
+          </div>
+        </div>
+      </Card>
+
       <Card>
         <div className="flex flex-col gap-4">
           <InfoRow label="Instagram">
@@ -90,9 +118,6 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
             >
               instagram.com/{profile.handle}
             </a>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Auto-linked from Instagram OAuth
-            </p>
           </InfoRow>
           <InfoRow label="Followers">
             <p className="font-semibold text-lg">
@@ -100,10 +125,27 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
                 ? profile.followersCount.toLocaleString()
                 : "Syncing..."}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Pulled from Instagram API
-            </p>
           </InfoRow>
+          <InfoRow label="Primary Platform">
+            <p className="font-medium capitalize">{profile.primaryPlatform ?? "Instagram"}</p>
+          </InfoRow>
+          {profile.platforms && profile.platforms.length > 0 && (
+            <InfoRow label="Platforms">
+              <div className="flex flex-col gap-1">
+                {profile.platforms.map((url, i) => (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-indigo-600 hover:underline truncate"
+                  >
+                    {url.replace(/https?:\/\//, "")}
+                  </a>
+                ))}
+              </div>
+            </InfoRow>
+          )}
           <InfoRow label="Location">
             <p className="font-medium">{profile.location ?? "Not set"}</p>
           </InfoRow>
@@ -123,8 +165,10 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
         <div className="grid grid-cols-2 gap-4">
           <MiniStat label="Tier" value={profile.tier} capitalize />
           <MiniStat label="XP" value={profile.xp.toLocaleString()} />
-          <MiniStat label="Campaigns" value={stats.completedCampaigns} />
+          <MiniStat label="Assignments" value={stats.completedAssignments} />
           <MiniStat label="Total Earned" value={`$${stats.totalEarned}`} />
+          <MiniStat label="Total HI" value={parseFloat(stats.totalHi).toFixed(1)} />
+          <MiniStat label="HIG Score" value={`${profile.higScore}/100`} />
         </div>
       </Card>
 
@@ -178,8 +222,7 @@ function PaymentsTab({ profile }: { profile: Profile }) {
         ) : (
           <div>
             <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-              Connect your Stripe account to receive payouts for completed campaigns.
-              Hyper uses Stripe Connect Express for fast, secure transfers.
+              Connect your Stripe account to receive payouts. Hyper uses Stripe Connect Express for fast, secure transfers.
             </p>
             <button className="w-full rounded-xl bg-black text-white py-3.5 font-semibold text-sm hover:bg-gray-900 active:scale-[0.98] transition-all shadow-lg shadow-black/10 min-h-[44px]">
               Connect Stripe Account
@@ -192,10 +235,10 @@ function PaymentsTab({ profile }: { profile: Profile }) {
         <h2 className="font-bold mb-4">How Payouts Work</h2>
         <div className="flex flex-col gap-4">
           {[
-            { step: "1", text: "Complete a campaign and submit your post" },
-            { step: "2", text: "The restaurant reviews and approves your content" },
-            { step: "3", text: "Payment is released to your Stripe account" },
-            { step: "4", text: "Funds arrive in 2-3 business days" },
+            { step: "1", text: "Hyper matches you with a restaurant" },
+            { step: "2", text: "Visit, create content, and post" },
+            { step: "3", text: "Send analytics 7 days later — HI is calculated" },
+            { step: "4", text: "Earn $4/HI (40% creator share of $10/HI)" },
           ].map((item) => (
             <div key={item.step} className="flex gap-3 items-start">
               <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">

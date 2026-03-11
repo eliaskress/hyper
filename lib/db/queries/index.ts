@@ -1,47 +1,54 @@
 import { db } from "@/lib/db";
-import { users, brands, campaigns, applications, payouts, badges } from "@/lib/db/schema";
-import { eq, desc, count, sum, sql } from "drizzle-orm";
+import { users, brands, briefings, assignments, posts, payouts, badges } from "@/lib/db/schema";
+import { eq, desc, count, sum, sql, and } from "drizzle-orm";
 
 // ── Creator Queries ─────────────────────────────────────────────────
 
-export async function getActiveCampaigns() {
+export async function getCreatorAssignments(userId: string) {
   return db
     .select({
-      id: campaigns.id,
-      title: campaigns.title,
-      description: campaigns.description,
-      payout: campaigns.payout,
-      status: campaigns.status,
-      deadline: campaigns.deadline,
-      createdAt: campaigns.createdAt,
-      brandId: campaigns.brandId,
+      id: assignments.id,
+      status: assignments.status,
+      allocatedHi: assignments.allocatedHi,
+      scheduledDate: assignments.scheduledDate,
+      scheduleType: assignments.scheduleTypeField,
+      scheduleTimeStart: assignments.scheduleTimeStart,
+      scheduleTimeEnd: assignments.scheduleTimeEnd,
+      role: assignments.role,
+      createdAt: assignments.createdAt,
+      contentBrief: briefings.contentBrief,
       businessName: brands.businessName,
       address: brands.address,
       verified: brands.verified,
+      postUrl: posts.postUrl,
+      hiCalculated: posts.hiCalculated,
     })
-    .from(campaigns)
-    .innerJoin(brands, eq(campaigns.brandId, brands.id))
-    .where(eq(campaigns.status, "active"))
-    .orderBy(desc(campaigns.createdAt));
+    .from(assignments)
+    .innerJoin(briefings, eq(assignments.briefingId, briefings.id))
+    .innerJoin(brands, eq(briefings.brandId, brands.id))
+    .leftJoin(posts, eq(posts.assignmentId, assignments.id))
+    .where(eq(assignments.creatorId, userId))
+    .orderBy(desc(assignments.createdAt));
 }
 
 export async function getCreatorStats(userId: string) {
-  const [appStats] = await db
+  const [assignmentStats] = await db
     .select({
       total: count(),
-      accepted: count(sql`CASE WHEN ${applications.status} = 'accepted' THEN 1 END`),
-      paid: count(sql`CASE WHEN ${applications.status} = 'paid' THEN 1 END`),
+      accepted: count(sql`CASE WHEN ${assignments.status} IN ('accepted','scheduled','posted','measured','paid') THEN 1 END`),
+      paid: count(sql`CASE WHEN ${assignments.status} = 'paid' THEN 1 END`),
     })
-    .from(applications)
-    .where(eq(applications.influencerId, userId));
+    .from(assignments)
+    .where(eq(assignments.creatorId, userId));
 
   const [earnings] = await db
     .select({
       totalEarned: sum(payouts.amount),
+      totalHi: sum(payouts.hiAmount),
     })
     .from(payouts)
-    .innerJoin(applications, eq(payouts.applicationId, applications.id))
-    .where(eq(applications.influencerId, userId));
+    .innerJoin(assignments, eq(payouts.assignmentId, assignments.id))
+    .where(eq(assignments.creatorId, userId));
 
   const userBadges = await db
     .select()
@@ -49,31 +56,13 @@ export async function getCreatorStats(userId: string) {
     .where(eq(badges.userId, userId));
 
   return {
-    totalApplications: appStats?.total ?? 0,
-    acceptedCampaigns: appStats?.accepted ?? 0,
-    completedCampaigns: appStats?.paid ?? 0,
+    totalAssignments: assignmentStats?.total ?? 0,
+    activeAssignments: assignmentStats?.accepted ?? 0,
+    completedAssignments: assignmentStats?.paid ?? 0,
     totalEarned: earnings?.totalEarned ?? "0",
+    totalHi: earnings?.totalHi ?? "0",
     badges: userBadges,
   };
-}
-
-export async function getCreatorApplications(userId: string) {
-  return db
-    .select({
-      id: applications.id,
-      status: applications.status,
-      postUrl: applications.postUrl,
-      submittedAt: applications.submittedAt,
-      campaignTitle: campaigns.title,
-      campaignPayout: campaigns.payout,
-      businessName: brands.businessName,
-      address: brands.address,
-    })
-    .from(applications)
-    .innerJoin(campaigns, eq(applications.campaignId, campaigns.id))
-    .innerJoin(brands, eq(campaigns.brandId, brands.id))
-    .where(eq(applications.influencerId, userId))
-    .orderBy(desc(applications.submittedAt));
 }
 
 export async function getCreatorEarnings(userId: string) {
@@ -81,17 +70,18 @@ export async function getCreatorEarnings(userId: string) {
     .select({
       payoutId: payouts.id,
       amount: payouts.amount,
+      hiAmount: payouts.hiAmount,
       status: payouts.status,
       paidAt: payouts.paidAt,
-      campaignTitle: campaigns.title,
+      contentBrief: briefings.contentBrief,
       businessName: brands.businessName,
       address: brands.address,
     })
     .from(payouts)
-    .innerJoin(applications, eq(payouts.applicationId, applications.id))
-    .innerJoin(campaigns, eq(applications.campaignId, campaigns.id))
-    .innerJoin(brands, eq(campaigns.brandId, brands.id))
-    .where(eq(applications.influencerId, userId))
+    .innerJoin(assignments, eq(payouts.assignmentId, assignments.id))
+    .innerJoin(briefings, eq(assignments.briefingId, briefings.id))
+    .innerJoin(brands, eq(briefings.brandId, brands.id))
+    .where(eq(assignments.creatorId, userId))
     .orderBy(desc(payouts.paidAt));
 }
 
@@ -107,6 +97,9 @@ export async function getCreatorProfile(userId: string) {
       stripeAccountId: users.stripeAccountId,
       xp: users.xp,
       tier: users.tier,
+      higScore: users.higScore,
+      primaryPlatform: users.primaryPlatform,
+      platforms: users.platforms,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -124,143 +117,206 @@ export async function getBrandByUserId(userId: string) {
   return brand ?? null;
 }
 
-export async function getBrandCampaigns(brandId: string) {
-  return db
+export async function getBrandBriefing(brandId: string) {
+  const [briefing] = await db
     .select()
-    .from(campaigns)
-    .where(eq(campaigns.brandId, brandId))
-    .orderBy(desc(campaigns.createdAt));
+    .from(briefings)
+    .where(eq(briefings.brandId, brandId))
+    .orderBy(desc(briefings.createdAt))
+    .limit(1);
+  return briefing ?? null;
 }
 
 export async function getBrandStats(brandId: string) {
-  const brandCampaigns = await db
-    .select({
-      id: campaigns.id,
-      status: campaigns.status,
-      payout: campaigns.payout,
-    })
-    .from(campaigns)
-    .where(eq(campaigns.brandId, brandId));
-
-  const campaignIds = brandCampaigns.map((c) => c.id);
-
-  let totalApplications = 0;
-  let totalPaid = 0;
-
-  if (campaignIds.length > 0) {
-    const [appStats] = await db
-      .select({
-        total: count(),
-      })
-      .from(applications)
-      .where(sql`${applications.campaignId} IN ${campaignIds}`);
-    totalApplications = appStats?.total ?? 0;
-
-    const [paidStats] = await db
-      .select({
-        total: sum(payouts.amount),
-      })
-      .from(payouts)
-      .innerJoin(applications, eq(payouts.applicationId, applications.id))
-      .where(sql`${applications.campaignId} IN ${campaignIds}`);
-    totalPaid = parseFloat(paidStats?.total ?? "0");
+  const briefing = await getBrandBriefing(brandId);
+  if (!briefing) {
+    return {
+      hasBriefing: false,
+      creatorsMatched: 0,
+      hiAllocated: "0",
+      hiDelivered: "0",
+      totalPaidOut: 0,
+      nextVisit: null,
+      engagement: { likes: 0, comments: 0, saves: 0, shares: 0, reach: 0 },
+    };
   }
 
+  const assignmentList = await db
+    .select({
+      id: assignments.id,
+      status: assignments.status,
+      scheduledDate: assignments.scheduledDate,
+      allocatedHi: assignments.allocatedHi,
+    })
+    .from(assignments)
+    .where(eq(assignments.briefingId, briefing.id));
+
+  const [paidStats] = await db
+    .select({
+      total: sum(payouts.amount),
+    })
+    .from(payouts)
+    .innerJoin(assignments, eq(payouts.assignmentId, assignments.id))
+    .where(eq(assignments.briefingId, briefing.id));
+
+  const [engagementStats] = await db
+    .select({
+      totalLikes: sum(posts.likes),
+      totalComments: sum(posts.comments),
+      totalSaves: sum(posts.saves),
+      totalShares: sum(posts.shares),
+      totalReach: sum(posts.reach),
+    })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(eq(assignments.briefingId, briefing.id));
+
+  const now = new Date();
+  const upcomingVisits = assignmentList
+    .filter((a) => a.scheduledDate && new Date(a.scheduledDate) > now)
+    .sort((a, b) => new Date(a.scheduledDate!).getTime() - new Date(b.scheduledDate!).getTime());
+
+  const totalAllocatedHi = assignmentList.reduce(
+    (sum, a) => sum + parseFloat(a.allocatedHi ?? "0"),
+    0
+  );
+
   return {
-    totalCampaigns: brandCampaigns.length,
-    activeCampaigns: brandCampaigns.filter((c) => c.status === "active").length,
-    completedCampaigns: brandCampaigns.filter((c) => c.status === "completed").length,
-    totalApplications,
-    totalPaidOut: totalPaid,
+    hasBriefing: true,
+    creatorsMatched: assignmentList.length,
+    hiAllocated: totalAllocatedHi.toFixed(2),
+    hiDelivered: briefing.hiDelivered,
+    totalPaidOut: parseFloat(paidStats?.total ?? "0"),
+    nextVisit: upcomingVisits[0]?.scheduledDate ?? null,
+    engagement: {
+      likes: parseInt(engagementStats?.totalLikes ?? "0"),
+      comments: parseInt(engagementStats?.totalComments ?? "0"),
+      saves: parseInt(engagementStats?.totalSaves ?? "0"),
+      shares: parseInt(engagementStats?.totalShares ?? "0"),
+      reach: parseInt(engagementStats?.totalReach ?? "0"),
+    },
   };
 }
 
-export async function getCampaignWithApplications(campaignId: string) {
-  const [campaign] = await db
+export async function getBriefingCreators(briefingId: string) {
+  return db
     .select({
-      id: campaigns.id,
-      title: campaigns.title,
-      description: campaigns.description,
-      payout: campaigns.payout,
-      status: campaigns.status,
-      deadline: campaigns.deadline,
-      createdAt: campaigns.createdAt,
+      assignmentId: assignments.id,
+      status: assignments.status,
+      allocatedHi: assignments.allocatedHi,
+      scheduledDate: assignments.scheduledDate,
+      scheduleType: assignments.scheduleTypeField,
+      scheduleTimeStart: assignments.scheduleTimeStart,
+      scheduleTimeEnd: assignments.scheduleTimeEnd,
+      role: assignments.role,
+      creatorId: users.id,
+      handle: users.handle,
+      avatar: users.avatar,
+      followersCount: users.followersCount,
+      location: users.location,
+      instagramId: users.instagramId,
+      tier: users.tier,
+      higScore: users.higScore,
+      postUrl: posts.postUrl,
+    })
+    .from(assignments)
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .leftJoin(posts, eq(posts.assignmentId, assignments.id))
+    .where(eq(assignments.briefingId, briefingId))
+    .orderBy(desc(assignments.createdAt));
+}
+
+export async function getBriefingReports(briefingId: string) {
+  return db
+    .select({
+      postId: posts.id,
+      postUrl: posts.postUrl,
+      platform: posts.platform,
+      likes: posts.likes,
+      comments: posts.comments,
+      saves: posts.saves,
+      shares: posts.shares,
+      reach: posts.reach,
+      hiCalculated: posts.hiCalculated,
+      postedAt: posts.postedAt,
+      measuredAt: posts.measuredAt,
+      creatorHandle: users.handle,
+      creatorAvatar: users.avatar,
+      creatorFollowers: users.followersCount,
+      assignmentStatus: assignments.status,
+    })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .where(eq(assignments.briefingId, briefingId))
+    .orderBy(desc(posts.postedAt));
+}
+
+export async function getAssignmentById(assignmentId: string) {
+  const [assignment] = await db
+    .select({
+      id: assignments.id,
+      briefingId: assignments.briefingId,
+      creatorId: assignments.creatorId,
+      status: assignments.status,
+      allocatedHi: assignments.allocatedHi,
+      scheduledDate: assignments.scheduledDate,
+      scheduleType: assignments.scheduleTypeField,
+      scheduleTimeStart: assignments.scheduleTimeStart,
+      scheduleTimeEnd: assignments.scheduleTimeEnd,
+      declineReason: assignments.declineReason,
+    })
+    .from(assignments)
+    .where(eq(assignments.id, assignmentId));
+  return assignment ?? null;
+}
+
+export async function getAssignmentDetail(assignmentId: string) {
+  const [result] = await db
+    .select({
+      id: assignments.id,
+      status: assignments.status,
+      allocatedHi: assignments.allocatedHi,
+      scheduledDate: assignments.scheduledDate,
+      scheduleType: assignments.scheduleTypeField,
+      scheduleTimeStart: assignments.scheduleTimeStart,
+      scheduleTimeEnd: assignments.scheduleTimeEnd,
+      role: assignments.role,
+      declineReason: assignments.declineReason,
+      createdAt: assignments.createdAt,
+      contentBrief: briefings.contentBrief,
+      availabilityDays: briefings.availabilityDays,
+      availabilityMeals: briefings.availabilityMeals,
       businessName: brands.businessName,
       address: brands.address,
       verified: brands.verified,
+      postUrl: posts.postUrl,
+      postPlatform: posts.platform,
+      likes: posts.likes,
+      comments: posts.comments,
+      saves: posts.saves,
+      shares: posts.shares,
+      reach: posts.reach,
+      hiCalculated: posts.hiCalculated,
+      postedAt: posts.postedAt,
+      measuredAt: posts.measuredAt,
     })
-    .from(campaigns)
-    .innerJoin(brands, eq(campaigns.brandId, brands.id))
-    .where(eq(campaigns.id, campaignId));
-
-  if (!campaign) return null;
-
-  const apps = await db
-    .select({
-      id: applications.id,
-      influencerId: applications.influencerId,
-      status: applications.status,
-      postUrl: applications.postUrl,
-      submittedAt: applications.submittedAt,
-      creatorHandle: users.handle,
-      creatorTier: users.tier,
-      creatorFollowers: users.followersCount,
-      creatorLocation: users.location,
-      creatorInstagramId: users.instagramId,
-    })
-    .from(applications)
-    .innerJoin(users, eq(applications.influencerId, users.id))
-    .where(eq(applications.campaignId, campaignId))
-    .orderBy(desc(applications.submittedAt));
-
-  return { ...campaign, applications: apps };
+    .from(assignments)
+    .innerJoin(briefings, eq(assignments.briefingId, briefings.id))
+    .innerJoin(brands, eq(briefings.brandId, brands.id))
+    .leftJoin(posts, eq(posts.assignmentId, assignments.id))
+    .where(eq(assignments.id, assignmentId));
+  return result ?? null;
 }
 
-export async function updateApplicationStatus(
-  applicationId: string,
-  status: "accepted" | "rejected",
+export async function updateAssignmentStatus(
+  assignmentId: string,
+  status: "accepted" | "declined" | "scheduled" | "posted" | "measured" | "paid",
 ) {
   const [updated] = await db
-    .update(applications)
+    .update(assignments)
     .set({ status })
-    .where(eq(applications.id, applicationId))
+    .where(eq(assignments.id, assignmentId))
     .returning();
   return updated ?? null;
-}
-
-export async function getApplicationById(applicationId: string) {
-  const [app] = await db
-    .select({
-      id: applications.id,
-      campaignId: applications.campaignId,
-      influencerId: applications.influencerId,
-      status: applications.status,
-      postUrl: applications.postUrl,
-      submittedAt: applications.submittedAt,
-    })
-    .from(applications)
-    .where(eq(applications.id, applicationId));
-  return app ?? null;
-}
-
-export async function getCampaignById(campaignId: string) {
-  const [campaign] = await db
-    .select({
-      id: campaigns.id,
-      title: campaigns.title,
-      description: campaigns.description,
-      payout: campaigns.payout,
-      status: campaigns.status,
-      deadline: campaigns.deadline,
-      createdAt: campaigns.createdAt,
-      businessName: brands.businessName,
-      address: brands.address,
-      verified: brands.verified,
-      brandId: campaigns.brandId,
-    })
-    .from(campaigns)
-    .innerJoin(brands, eq(campaigns.brandId, brands.id))
-    .where(eq(campaigns.id, campaignId));
-
-  return campaign ?? null;
 }

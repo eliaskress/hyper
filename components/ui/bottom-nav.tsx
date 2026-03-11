@@ -5,16 +5,15 @@ import { usePathname } from "next/navigation";
 
 const brandTabs = [
   { href: "/brand", label: "Home", icon: HomeIcon },
-  { href: "/brand/campaigns", label: "Campaigns", icon: CampaignIcon },
-  { href: "/brand/applications", label: "Apps", icon: InboxIcon },
-  { href: "/brand/payouts", label: "Payouts", icon: WalletIcon },
+  { href: "/brand/briefing", label: "Briefing", icon: BriefingIcon },
+  { href: "/brand/creators", label: "Creators", icon: CreatorsIcon },
+  { href: "/brand/reports", label: "Reports", icon: ReportsIcon },
   { href: "/brand/profile", label: "Profile", icon: ProfileIcon },
 ];
 
 const influencerTabs = [
   { href: "/influencer", label: "Home", icon: HomeIcon },
-  { href: "/influencer/browse", label: "Browse", icon: SearchIcon },
-  { href: "/influencer/applications", label: "Applied", icon: InboxIcon },
+  { href: "/influencer/assignments", label: "Assignments", icon: AssignmentIcon },
   { href: "/influencer/earnings", label: "Earnings", icon: WalletIcon },
   { href: "/influencer/profile", label: "Profile", icon: ProfileIcon },
 ];
@@ -63,29 +62,39 @@ function HomeIcon({ active }: { active: boolean }) {
   );
 }
 
-function SearchIcon({ active }: { active: boolean }) {
+function BriefingIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.35-4.35" />
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M16 13H8M16 17H8M10 9H8" />
     </svg>
   );
 }
 
-function CampaignIcon({ active }: { active: boolean }) {
+function CreatorsIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M8 7h8M8 12h6M8 17h4" />
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
     </svg>
   );
 }
 
-function InboxIcon({ active }: { active: boolean }) {
+function ReportsIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 12h-6l-2 3H10l-2-3H2" />
-      <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
+      <path d="M18 20V10M12 20V4M6 20v-6" />
+    </svg>
+  );
+}
+
+function AssignmentIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
     </svg>
   );
 }

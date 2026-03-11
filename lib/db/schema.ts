@@ -8,6 +8,7 @@ import {
   boolean,
   numeric,
   timestamp,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 
 // ── Enums ──────────────────────────────────────────────────────────────────────
@@ -21,20 +22,26 @@ export const userTier = pgEnum('user_tier', [
   'pro',
 ]);
 
-export const campaignStatus = pgEnum('campaign_status', [
+export const briefingStatus = pgEnum('briefing_status', [
   'draft',
   'active',
-  'in_review',
+  'paused',
   'completed',
-  'cancelled',
 ]);
 
-export const applicationStatus = pgEnum('application_status', [
-  'applied',
+export const budgetType = pgEnum('budget_type', [
+  'per_engagement',
+  'monthly',
+]);
+
+export const assignmentStatus = pgEnum('assignment_status', [
+  'invited',
   'accepted',
-  'content_submitted',
+  'scheduled',
+  'posted',
+  'measured',
   'paid',
-  'rejected',
+  'declined',
 ]);
 
 export const payoutStatus = pgEnum('payout_status', [
@@ -52,6 +59,8 @@ export const badgeType = pgEnum('badge_type', [
   'payout_milestone',
 ]);
 
+export const scheduleType = pgEnum('schedule_type', ['fixed', 'flexible']);
+
 // ── Tables ─────────────────────────────────────────────────────────────────────
 
 export const users = pgTable('users', {
@@ -65,6 +74,9 @@ export const users = pgTable('users', {
   stripeAccountId: varchar('stripe_account_id'),
   xp: integer('xp').default(0).notNull(),
   tier: userTier('tier').default('starter').notNull(),
+  higScore: integer('hig_score').default(0).notNull(),
+  primaryPlatform: varchar('primary_platform').default('instagram'),
+  platforms: jsonb('platforms').$type<string[]>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -78,41 +90,68 @@ export const brands = pgTable('brands', {
   address: text('address'),
   verified: boolean('verified').default(false).notNull(),
   stripeAccountId: varchar('stripe_account_id'),
+  whatsappConnected: boolean('whatsapp_connected').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const campaigns = pgTable('campaigns', {
+export const briefings = pgTable('briefings', {
   id: uuid('id').primaryKey().defaultRandom(),
   brandId: uuid('brand_id')
     .references(() => brands.id)
     .notNull(),
-  title: varchar('title').notNull(),
-  description: text('description').notNull(),
-  payout: numeric('payout', { precision: 10, scale: 2 }).notNull(),
-  status: campaignStatus('status').default('draft').notNull(),
-  deadline: timestamp('deadline').notNull(),
+  contentBrief: text('content_brief').notNull(),
+  availabilityDays: jsonb('availability_days').$type<string[]>(),
+  availabilityMeals: jsonb('availability_meals').$type<string[]>(),
+  budgetHi: numeric('budget_hi', { precision: 10, scale: 2 }).notNull(),
+  budgetTypeField: budgetType('budget_type').default('per_engagement').notNull(),
+  status: briefingStatus('status').default('active').notNull(),
+  hiDelivered: numeric('hi_delivered', { precision: 10, scale: 2 }).default('0').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const applications = pgTable('applications', {
+export const assignments = pgTable('assignments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  campaignId: uuid('campaign_id')
-    .references(() => campaigns.id)
+  briefingId: uuid('briefing_id')
+    .references(() => briefings.id)
     .notNull(),
-  influencerId: uuid('influencer_id')
+  creatorId: uuid('creator_id')
     .references(() => users.id)
     .notNull(),
-  status: applicationStatus('status').default('applied').notNull(),
+  status: assignmentStatus('status').default('invited').notNull(),
+  allocatedHi: numeric('allocated_hi', { precision: 10, scale: 2 }),
+  scheduledDate: timestamp('scheduled_date'),
+  scheduleTypeField: scheduleType('schedule_type'),
+  scheduleTimeStart: varchar('schedule_time_start'),
+  scheduleTimeEnd: varchar('schedule_time_end'),
+  role: varchar('role').default('originator'),
+  declineReason: text('decline_reason'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const posts = pgTable('posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id)
+    .notNull(),
+  platform: varchar('platform').default('instagram').notNull(),
   postUrl: text('post_url'),
-  submittedAt: timestamp('submitted_at').defaultNow().notNull(),
+  likes: integer('likes'),
+  comments: integer('comments'),
+  saves: integer('saves'),
+  shares: integer('shares'),
+  reach: integer('reach'),
+  hiCalculated: numeric('hi_calculated', { precision: 10, scale: 2 }),
+  postedAt: timestamp('posted_at'),
+  measuredAt: timestamp('measured_at'),
 });
 
 export const payouts = pgTable('payouts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  applicationId: uuid('application_id')
-    .references(() => applications.id)
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id)
     .notNull(),
   amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  hiAmount: numeric('hi_amount', { precision: 10, scale: 2 }),
   status: payoutStatus('status').default('pending').notNull(),
   stripeTransferId: varchar('stripe_transfer_id'),
   paidAt: timestamp('paid_at'),
