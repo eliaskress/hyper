@@ -2,25 +2,25 @@
 
 ## What Hyper Is
 
-Hyper is the network that finally pays micro-influencers what they're worth.
+Hyper converts influence into a quantifiable economic unit.
 
-For too long, the exchange between local businesses and creators has been lopsided: a business gets real marketing reach, and the creator gets a coupon code or a free meal. Hyper fixes that. We're the bridge between businesses that need authentic local promotion and creators who deserve real compensation for their real audiences.
+For too long, the exchange between restaurants and creators has been lopsided: a restaurant gets real marketing reach, and the creator gets a coupon code or a free meal. Hyper fixes that. We're the bridge between restaurants that need authentic local promotion and creators who deserve real compensation for their real audiences.
 
-We're not a talent agency. We're not a media buy. We're a network — fast, fair, and built for the street level.
+We start with restaurants — high creator activity, strong visual content, dense local networks. We're not a talent agency. We're not a media buy. We're an influence network — fast, fair, and built for the street level.
 
 ---
 
 ## Who We Serve
 
-### The Influencer
-She has 4,200 followers on Instagram. They trust her. She posts about her city, her favorite spots, her life. Brands DM her all the time asking for free posts in exchange for product. She's done accepting crumbs.
+### The Creator
+She has 4,200 followers on Instagram. They trust her. She posts about her city, her favorite spots, her life. Restaurants DM her all the time asking for free posts in exchange for a meal. She's done accepting crumbs.
 
-She wants to turn her influence into income — without becoming a sell-out, without a manager, and without a complicated dashboard that makes her feel like she's filing taxes.
+She wants to turn her influence into income — without becoming a sell-out, without a manager, and without a complicated dashboard that makes her feel like she's filing taxes. She joins Hyper by scanning a QR code at a restaurant and chatting on WhatsApp. Under two minutes.
 
-### The Business
+### The Restaurant
 He owns a taco spot that's been open three years. He can't afford a full marketing agency. He's tried boosted posts; they don't feel real. He knows word-of-mouth is his best tool, and he knows people with audiences live in his neighborhood. He just doesn't know how to reach them, or how to make it official.
 
-He wants it to be simple: post a campaign, pick someone who gets it, pay them when it's done.
+He wants it to be simple: set a budget in HI units, let Hyper allocate creators, pay when it's done.
 
 ---
 
@@ -48,7 +48,7 @@ Hyper speaks like a sharp, friendly person who respects your time.
 | "Your application has been submitted for review." | "Application sent. We'll let you know when they respond." |
 | "Congratulations! You have earned a new achievement!" | "You just hit 5 completed campaigns. That's a big deal." |
 | "Please complete your onboarding to access all features." | "Add your payout info so you can actually get paid." |
-| "No campaigns match your search criteria." | "Nothing here yet. Check back soon — businesses post daily." |
+| "No campaigns match your search criteria." | "Nothing here yet. Check back soon — restaurants post daily." |
 | "Error processing your request." | "Something went wrong on our end. Try again in a sec." |
 
 ---
@@ -56,19 +56,19 @@ Hyper speaks like a sharp, friendly person who respects your time.
 ## Our Values
 
 ### Pay people what they're worth.
-This is the whole reason Hyper exists. Every product decision should make it easier, faster, and more reliable for influencers to get paid fairly for real work.
+This is the whole reason Hyper exists. Every product decision should make it easier, faster, and more reliable for creators to get paid fairly for real work.
 
 ### Keep it real.
 Hyper campaigns should feel authentic — not like ads that pretend not to be ads. We enable honest creator endorsements, not manufactured content.
 
 ### Respect both sides.
-Influencers and businesses are equals on this platform. Neither is the "customer" at the expense of the other. Both have a job to do. Both deserve a good experience.
+Creators and restaurants are equals on this platform. Neither is the "customer" at the expense of the other. Both have a job to do. Both deserve a good experience.
 
 ### Simple is hard. Do it anyway.
 The temptation is always to add more. More features, more steps, more options. Resist it. The best version of Hyper is the one that gets out of the way and lets the deal happen.
 
 ### Local first.
-Hyper starts local — neighborhood businesses, city creators. That's where authentic influence actually lives. We honor that.
+Hyper starts local — neighborhood restaurants, city creators. That's where authentic influence actually lives. We honor that.
 
 ---
 
@@ -82,7 +82,7 @@ The goal is to acknowledge real accomplishment and make the platform feel alive 
 - First campaign completed (for both sides)
 - Hitting payout milestones
 - Building a track record of reliability
-- Getting repeat bookings from the same brand
+- Getting repeat bookings from the same restaurant
 - Exploring new campaign categories
 
 ### What we don't do:
@@ -104,9 +104,9 @@ Achievements should feel like a friend noticing something real. Not a trophy cas
 
 ## The Promise
 
-To influencers: **You will get paid. On time. For real work.**
+To creators: **You will get paid. On time. For real work.**
 
-To businesses: **You will reach real people in your community who actually care.**
+To restaurants: **You will reach real people in your community who actually care.**
 
 To both: **This will be simple.**
 
@@ -114,8 +114,8 @@ To both: **This will be simple.**
 
 ## What Success Looks Like
 
-A micro-influencer in her city posts a story for a coffee shop three blocks from her apartment. Her followers are people who live nearby and trust her taste. The coffee shop gets 40 new customers in a week. She gets $75 in her bank account by Friday.
+A creator in LA posts a story for a taco spot three blocks from her apartment. Her followers are people who live nearby and trust her taste. The restaurant gets 40 new customers in a week. She generated 12 HI and gets $48 in her bank account by Friday.
 
-Neither of them had to hire anyone, sign a contract, or explain what a media kit is.
+Neither of them had to hire anyone, sign a contract, or explain what a media kit is. She scanned a QR code. He set a budget. Hyper handled the rest.
 
 That's Hyper working.

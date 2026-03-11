@@ -28,14 +28,14 @@ This applies to:
 - Campaign status (Draft → Active → In Review → Completed)
 - Application status (Applied → Accepted → Content Submitted → Paid)
 - Onboarding completeness (always show what's missing and why it matters)
-- XP and tier progress (always show the gap between now and the next level)
+- HIG score progress (always show the gap between current score and next tier)
 
 Never make users wonder if something happened. Confirm every action explicitly.
 
 ### 3. Speed Over Completeness
 Hyper is used on mobile, on the go, in between other things. Design for the person who has 90 seconds, not the person who has 20 minutes.
 
-- Campaign cards must communicate the essentials without opening: brand name, payout, content type, deadline.
+- Campaign cards must communicate the essentials without opening: restaurant name, payout, content type, deadline.
 - Applications should be submittable in under 2 minutes.
 - Dashboard should load the most important information first, above the fold, always.
 - Prefer progressive disclosure: show the essential, reveal the detail on demand.
@@ -46,9 +46,9 @@ Avoid: long forms with many fields on one screen, required reading before action
 Both sides of every deal are trusting Hyper with their time and money. Design should reinforce that trust, not exploit it.
 
 - Show real payout amounts everywhere — no hidden fees revealed at checkout.
-- Surface platform fee clearly in brand campaign creation, not as fine print.
-- Show influencer follower count and completion rate before a brand commits.
-- Show brand verification status before an influencer applies.
+- Surface the 40/40/20 revenue split clearly in merchant campaign creation, not as fine print.
+- Show creator HIG score and completion rate before a merchant commits.
+- Show merchant verification status before a creator applies.
 - Never use dark patterns: no pre-checked boxes, no fake scarcity, no confusing cancellation flows.
 
 ### 5. Delight Is in the Details
@@ -68,7 +68,7 @@ Avoid: animations that slow things down, achievement popups that interrupt workf
 ### Aesthetic
 Hyper is modern, confident, and grounded. Not corporate. Not pastel startup. Not streetwear hype. Think: clean type, bold color accents, generous whitespace, photography-forward.
 
-It should feel like something a 26-year-old creator would actually want on their phone, and that a business owner would feel is serious enough to trust with their money.
+It should feel like something a 26-year-old creator would actually want on their phone, and that a restaurant owner would feel is serious enough to trust with their money.
 
 ### Color
 - **Primary:** A bold, saturated accent (electric blue or deep violet — to be finalized in design system)
@@ -82,7 +82,7 @@ Color should carry meaning. Don't use the primary accent for decoration.
 ### Typography
 - One typeface family throughout (sans-serif, legible at small sizes)
 - Type hierarchy is strict: there should never be more than 3 text sizes on one screen
-- Numbers — payouts, follower counts, XP — should be visually prominent. Make the money feel real.
+- Numbers — payouts, follower counts, HI, HIG scores — should be visually prominent. Make the money feel real.
 
 ### Iconography
 - Use icons to reinforce meaning, never to replace labels
@@ -110,35 +110,37 @@ Hyper is primarily a mobile experience.
 
 ## Gamification Design
 
-### XP and Tiers
-Influencers earn XP for completing campaigns, hitting payout milestones, and building reliability metrics. XP unlocks tiers that unlock higher-paying campaign types.
+### HIG (Hyper Influence Graph) Score
+Each creator receives a HIG score (0–100) that determines campaign allocation priority. HIG is the primary reputation metric — it replaces traditional XP systems.
 
-Tier names should feel like progression, not hierarchy:
+HIG components:
 
-| Tier | Feel |
+| Component | Weight |
 |---|---|
-| Starter | Just getting going |
-| Rising | Gaining momentum |
-| Established | Proven track record |
-| Pro | Top of the network |
+| HI performance | 50% |
+| Amplification effectiveness | 20% |
+| Reliability | 20% |
+| Network contribution | 10% |
 
-Brands also have a trust score that improves with successful campaigns, fair reviews, and on-time payment.
+Higher HIG = priority access to higher-budget campaigns. HIG should feel like earned credibility, not a gamified treadmill.
+
+Merchants also have a trust score that improves with successful campaigns, fair reviews, and on-time payment.
 
 ### Badges
 Badges are specific, earned for real actions, and displayed on profiles to build trust between parties.
 
 Examples:
-- "Fast Responder" — responds to applications within 24hr (brand)
-- "On-Time Creator" — submits content before deadline (influencer)
-- "Repeat Partner" — booked by same brand 3+ times (influencer)
+- "Fast Responder" — responds to applications within 24hr (merchant)
+- "On-Time Creator" — submits content before deadline (creator)
+- "Repeat Partner" — booked by same merchant 3+ times (creator)
 - "Local Champion" — 10 campaigns completed in the same city
 
 Badges should mean something to the other side of the deal — they're signals of reliability, not vanity points.
 
 ### Notifications and Progress
-- Progress toward next tier should be visible on the dashboard — always show the gap
+- HIG score progress should be visible on the dashboard — always show the gap
 - Payout milestones surfaced as moments: "$500 total earned. You're building real income."
-- Campaign completion triggers a summary card: what was earned, what XP was gained, what badge progress was made
+- Campaign completion triggers a summary card: HI generated, earnings breakdown, badge progress
 
 ---
 
@@ -153,7 +155,7 @@ Every empty state should:
 
 Examples:
 - No campaigns available: "Nothing matching right now. New campaigns post daily — check back or adjust your filters."
-- No applications yet (brand): "No one's applied yet. Share your campaign to get more eyes on it."
+- No applications yet (merchant): "No one's applied yet. Share your campaign to get more eyes on it."
 - New user dashboard: "You're all set. Browse campaigns and find your first one."
 
 ---
