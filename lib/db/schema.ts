@@ -37,6 +37,12 @@ export const applicationStatus = pgEnum('application_status', [
   'rejected',
 ]);
 
+export const payoutStatus = pgEnum('payout_status', [
+  'pending',
+  'paid',
+  'cancelled',
+]);
+
 export const badgeType = pgEnum('badge_type', [
   'fast_responder',
   'on_time_creator',
@@ -54,6 +60,9 @@ export const users = pgTable('users', {
   role: userRole('role'),
   handle: varchar('handle').notNull(),
   avatar: text('avatar'),
+  followersCount: integer('followers_count'),
+  location: varchar('location'),
+  stripeAccountId: varchar('stripe_account_id'),
   xp: integer('xp').default(0).notNull(),
   tier: userTier('tier').default('starter').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -66,6 +75,7 @@ export const brands = pgTable('brands', {
     .unique()
     .notNull(),
   businessName: varchar('business_name').notNull(),
+  address: text('address'),
   verified: boolean('verified').default(false).notNull(),
   stripeAccountId: varchar('stripe_account_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -103,6 +113,7 @@ export const payouts = pgTable('payouts', {
     .references(() => applications.id)
     .notNull(),
   amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  status: payoutStatus('status').default('pending').notNull(),
   stripeTransferId: varchar('stripe_transfer_id'),
   paidAt: timestamp('paid_at'),
 });

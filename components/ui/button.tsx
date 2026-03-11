@@ -9,15 +9,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-black text-white hover:bg-gray-800",
-  secondary: "bg-white text-black border border-gray-300 hover:bg-gray-50",
-  ghost: "bg-transparent text-gray-600 hover:text-black hover:bg-gray-100",
+  primary:
+    "bg-black text-white hover:bg-gray-900 active:scale-[0.98] shadow-sm",
+  secondary:
+    "bg-white text-black border border-gray-200 hover:bg-gray-50 active:scale-[0.98] shadow-sm",
+  ghost:
+    "bg-transparent text-gray-600 hover:text-black hover:bg-gray-100 active:scale-[0.98]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-base",
-  lg: "px-6 py-3 text-lg",
+  sm: "px-3.5 py-2 text-sm",
+  md: "px-5 py-2.5 text-sm",
+  lg: "px-6 py-3 text-base",
 };
 
 export function Button({
@@ -28,7 +31,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`rounded-lg font-medium transition-colors min-h-[44px] ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`rounded-xl font-semibold transition-all duration-150 min-h-[44px] ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       {...props}
     />
   );

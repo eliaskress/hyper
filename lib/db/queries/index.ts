@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { users, brands, campaigns, applications, payouts, badges } from "@/lib/db/schema";
-import { eq, desc, count, sum, and, sql } from "drizzle-orm";
+import { eq, desc, count, sum, sql } from "drizzle-orm";
 
 // ── Creator Queries ─────────────────────────────────────────────────
 
@@ -16,6 +16,7 @@ export async function getActiveCampaigns() {
       createdAt: campaigns.createdAt,
       brandId: campaigns.brandId,
       businessName: brands.businessName,
+      address: brands.address,
       verified: brands.verified,
     })
     .from(campaigns)
@@ -66,12 +67,51 @@ export async function getCreatorApplications(userId: string) {
       campaignTitle: campaigns.title,
       campaignPayout: campaigns.payout,
       businessName: brands.businessName,
+      address: brands.address,
     })
     .from(applications)
     .innerJoin(campaigns, eq(applications.campaignId, campaigns.id))
     .innerJoin(brands, eq(campaigns.brandId, brands.id))
     .where(eq(applications.influencerId, userId))
     .orderBy(desc(applications.submittedAt));
+}
+
+export async function getCreatorEarnings(userId: string) {
+  return db
+    .select({
+      payoutId: payouts.id,
+      amount: payouts.amount,
+      status: payouts.status,
+      paidAt: payouts.paidAt,
+      campaignTitle: campaigns.title,
+      businessName: brands.businessName,
+      address: brands.address,
+    })
+    .from(payouts)
+    .innerJoin(applications, eq(payouts.applicationId, applications.id))
+    .innerJoin(campaigns, eq(applications.campaignId, campaigns.id))
+    .innerJoin(brands, eq(campaigns.brandId, brands.id))
+    .where(eq(applications.influencerId, userId))
+    .orderBy(desc(payouts.paidAt));
+}
+
+export async function getCreatorProfile(userId: string) {
+  const [user] = await db
+    .select({
+      id: users.id,
+      handle: users.handle,
+      instagramId: users.instagramId,
+      avatar: users.avatar,
+      followersCount: users.followersCount,
+      location: users.location,
+      stripeAccountId: users.stripeAccountId,
+      xp: users.xp,
+      tier: users.tier,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .where(eq(users.id, userId));
+  return user ?? null;
 }
 
 // ── Brand/Restaurant Queries ────────────────────────────────────────
@@ -146,6 +186,7 @@ export async function getCampaignWithApplications(campaignId: string) {
       deadline: campaigns.deadline,
       createdAt: campaigns.createdAt,
       businessName: brands.businessName,
+      address: brands.address,
       verified: brands.verified,
     })
     .from(campaigns)
@@ -157,11 +198,15 @@ export async function getCampaignWithApplications(campaignId: string) {
   const apps = await db
     .select({
       id: applications.id,
+      influencerId: applications.influencerId,
       status: applications.status,
       postUrl: applications.postUrl,
       submittedAt: applications.submittedAt,
       creatorHandle: users.handle,
       creatorTier: users.tier,
+      creatorFollowers: users.followersCount,
+      creatorLocation: users.location,
+      creatorInstagramId: users.instagramId,
     })
     .from(applications)
     .innerJoin(users, eq(applications.influencerId, users.id))
@@ -169,6 +214,33 @@ export async function getCampaignWithApplications(campaignId: string) {
     .orderBy(desc(applications.submittedAt));
 
   return { ...campaign, applications: apps };
+}
+
+export async function updateApplicationStatus(
+  applicationId: string,
+  status: "accepted" | "rejected",
+) {
+  const [updated] = await db
+    .update(applications)
+    .set({ status })
+    .where(eq(applications.id, applicationId))
+    .returning();
+  return updated ?? null;
+}
+
+export async function getApplicationById(applicationId: string) {
+  const [app] = await db
+    .select({
+      id: applications.id,
+      campaignId: applications.campaignId,
+      influencerId: applications.influencerId,
+      status: applications.status,
+      postUrl: applications.postUrl,
+      submittedAt: applications.submittedAt,
+    })
+    .from(applications)
+    .where(eq(applications.id, applicationId));
+  return app ?? null;
 }
 
 export async function getCampaignById(campaignId: string) {
@@ -182,6 +254,7 @@ export async function getCampaignById(campaignId: string) {
       deadline: campaigns.deadline,
       createdAt: campaigns.createdAt,
       businessName: brands.businessName,
+      address: brands.address,
       verified: brands.verified,
       brandId: campaigns.brandId,
     })
