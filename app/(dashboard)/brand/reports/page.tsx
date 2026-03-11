@@ -29,7 +29,12 @@ export default async function ReportsPage() {
   const reports = await getBriefingReports(briefing.id);
   const measuredPosts = reports.filter((r) => r.hiCalculated);
   const totalHi = measuredPosts.reduce((sum, r) => sum + parseFloat(r.hiCalculated ?? "0"), 0);
-  const roi = stats.creatorsMatched > 0 ? (totalHi / stats.creatorsMatched).toFixed(1) : "0";
+  const totalLikes = measuredPosts.reduce((sum, r) => sum + (r.likes ?? 0), 0);
+  const totalComments = measuredPosts.reduce((sum, r) => sum + (r.comments ?? 0), 0);
+  const totalSaves = measuredPosts.reduce((sum, r) => sum + (r.saves ?? 0), 0);
+  const totalShares = measuredPosts.reduce((sum, r) => sum + (r.shares ?? 0), 0);
+  const totalReach = measuredPosts.reduce((sum, r) => sum + (r.reach ?? 0), 0);
+  const totalEngagements = totalLikes + totalComments + totalSaves + totalShares;
 
   return (
     <div className="p-4 space-y-6">
@@ -38,12 +43,21 @@ export default async function ReportsPage() {
         <p className="text-sm text-gray-500 mt-0.5">Campaign performance and HI results</p>
       </div>
 
-      {/* Summary Stats */}
+      {/* Hero HI */}
+      <Card className="p-4 text-center">
+        <p className="text-xs text-gray-500 mb-1">Total HI Delivered</p>
+        <p className="text-4xl font-extrabold">{totalHi.toFixed(1)}</p>
+        <p className="text-xs text-gray-400 mt-1">{measuredPosts.length} post{measuredPosts.length !== 1 ? "s" : ""} measured</p>
+      </Card>
+
+      {/* Engagement Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Total HI" value={totalHi.toFixed(1)} accent />
-        <StatCard label="Posts Measured" value={measuredPosts.length} />
-        <StatCard label="HI per Creator" value={roi} />
-        <StatCard label="Creators" value={stats.creatorsMatched} />
+        <StatCard label="Engagements" value={totalEngagements.toLocaleString()} accent />
+        <StatCard label="Reach" value={totalReach.toLocaleString()} />
+        <StatCard label="Likes" value={totalLikes.toLocaleString()} />
+        <StatCard label="Comments" value={totalComments.toLocaleString()} />
+        <StatCard label="Saves" value={totalSaves.toLocaleString()} />
+        <StatCard label="Shares" value={totalShares.toLocaleString()} />
       </div>
 
       {/* Post Results */}
@@ -64,6 +78,22 @@ export default async function ReportsPage() {
                 </div>
                 <StatusBadge status={post.assignmentStatus} />
               </div>
+
+              {post.postUrl && (
+                <a
+                  href={post.postUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 mt-1"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                    <path d="M15 3h6v6" />
+                    <path d="M10 14L21 3" />
+                  </svg>
+                  View post
+                </a>
+              )}
 
               {post.hiCalculated ? (
                 <>
@@ -123,7 +153,7 @@ export default async function ReportsPage() {
           messages={[
             {
               from: "hyper",
-              text: `${brand.businessName} — Weekly Report\n\nCreators active: ${stats.creatorsMatched}\nHI delivered: ${totalHi.toFixed(1)}\nHI per creator: ${roi}\n\nYour campaign is running.`,
+              text: `${brand.businessName} — Weekly Report\n\nHI delivered: ${totalHi.toFixed(1)}\nEngagements: ${totalEngagements.toLocaleString()}\nReach: ${totalReach.toLocaleString()}\n\nYour campaign is running.`,
               time: "9:00 AM",
             },
           ]}

@@ -1,6 +1,7 @@
 import { getBrandByUserId } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { WhatsAppIndicator } from "@/components/ui/whatsapp-preview";
+import { BrandProfileEdit } from "./profile-edit";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,12 @@ export default async function BrandProfile() {
         </div>
       </Card>
 
+      {/* Instagram */}
+      <Card className="mb-4">
+        <h2 className="font-bold mb-3">Instagram</h2>
+        <BrandProfileEdit brandId={brand.id} currentHandle={brand.instagramHandle ?? ""} />
+      </Card>
+
       {/* WhatsApp Connection */}
       <Card className="mb-4">
         <h2 className="font-bold mb-3">WhatsApp</h2>
@@ -50,22 +57,31 @@ export default async function BrandProfile() {
         )}
       </Card>
 
-      {/* Stripe */}
+      {/* Payment Plan */}
       <Card>
-        <h2 className="font-bold mb-3">Payment Method</h2>
+        <h2 className="font-bold mb-3">Payment Plan</h2>
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-3 h-3 rounded-full ${brand.stripeAccountId ? "bg-emerald-500" : "bg-gray-300"}`} />
-          <p className="font-semibold">{brand.stripeAccountId ? "Stripe Connected" : "Not connected"}</p>
+          <p className="font-semibold">{brand.stripeAccountId ? "Active subscription" : "No plan set up"}</p>
         </div>
-        {!brand.stripeAccountId && (
-          <>
+        {brand.stripeAccountId ? (
+          <div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Your monthly budget is billed automatically. Hyper allocates your HI budget across matched creators.
+            </p>
+            <button className="w-full mt-4 rounded-xl border-2 border-gray-200 py-3.5 font-semibold text-sm hover:bg-gray-50 transition-all min-h-[44px]">
+              Manage Subscription
+            </button>
+          </div>
+        ) : (
+          <div>
             <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-              Connect Stripe to fund your influence budget. Hyper uses Stripe for secure payments.
+              Set up a monthly payment plan to fund your influence budget. Hyper handles all creator payments automatically.
             </p>
             <button className="w-full rounded-xl bg-black text-white py-3.5 font-semibold text-sm hover:bg-gray-900 active:scale-[0.98] transition-all shadow-lg shadow-black/10 min-h-[44px]">
-              Connect Stripe
+              Set Up Payment Plan
             </button>
-          </>
+          </div>
         )}
       </Card>
     </div>

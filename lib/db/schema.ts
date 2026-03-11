@@ -87,6 +87,7 @@ export const brands = pgTable('brands', {
     .unique()
     .notNull(),
   businessName: varchar('business_name').notNull(),
+  instagramHandle: varchar('instagram_handle'),
   address: text('address'),
   verified: boolean('verified').default(false).notNull(),
   stripeAccountId: varchar('stripe_account_id'),
