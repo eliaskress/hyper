@@ -1,25 +1,48 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { users, brands, briefings, assignments } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function GET() {
-  const dbUrl = process.env.DATABASE_URL;
-  const masked = dbUrl
-    ? `${dbUrl.slice(0, 15)}...${dbUrl.slice(-15)} (len:${dbUrl.length})`
-    : "UNDEFINED";
+  const results: Record<string, unknown> = {};
 
-  let dbTest = "not tested";
   try {
-    const { neon } = await import("@neondatabase/serverless");
-    const sql = neon(dbUrl!);
-    const result = await sql`SELECT 1 as ok`;
-    dbTest = `OK: ${JSON.stringify(result)}`;
+    const [user] = await db.select().from(users).where(eq(users.id, "00000000-0000-0000-0000-000000000001")).limit(1);
+    results.user = user ? `OK: ${user.handle}` : "NOT FOUND";
   } catch (e: unknown) {
-    dbTest = `FAIL: ${e instanceof Error ? e.message.slice(0, 200) : String(e)}`;
+    results.user = `FAIL: ${e instanceof Error ? e.message.slice(0, 300) : String(e)}`;
   }
 
-  return NextResponse.json({
-    db: masked,
-    dbTest,
-    env: process.env.VERCEL_ENV,
-    commitSha: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7),
-  });
+  try {
+    const [brand] = await db.select().from(brands).where(eq(brands.userId, "00000000-0000-0000-0000-000000000010")).limit(1);
+    results.brand = brand ? `OK: ${brand.businessName}` : "NOT FOUND";
+  } catch (e: unknown) {
+    results.brand = `FAIL: ${e instanceof Error ? e.message.slice(0, 300) : String(e)}`;
+  }
+
+  try {
+    const { getCreatorAssignments } = await import("@/lib/db/queries");
+    const a = await getCreatorAssignments("00000000-0000-0000-0000-000000000001");
+    results.assignments = `OK: ${a.length} assignments`;
+  } catch (e: unknown) {
+    results.assignments = `FAIL: ${e instanceof Error ? e.stack?.slice(0, 500) : String(e)}`;
+  }
+
+  try {
+    const { getCreatorStats } = await import("@/lib/db/queries");
+    const s = await getCreatorStats("00000000-0000-0000-0000-000000000001");
+    results.stats = `OK: ${JSON.stringify(s).slice(0, 200)}`;
+  } catch (e: unknown) {
+    results.stats = `FAIL: ${e instanceof Error ? e.stack?.slice(0, 500) : String(e)}`;
+  }
+
+  try {
+    const { getBrandStats } = await import("@/lib/db/queries");
+    const s = await getBrandStats("00000000-0000-0000-0000-000000000100");
+    results.brandStats = `OK: ${JSON.stringify(s).slice(0, 200)}`;
+  } catch (e: unknown) {
+    results.brandStats = `FAIL: ${e instanceof Error ? e.stack?.slice(0, 500) : String(e)}`;
+  }
+
+  return NextResponse.json(results);
 }
