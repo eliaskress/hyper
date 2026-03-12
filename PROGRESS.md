@@ -1,10 +1,40 @@
 # PROGRESS.md  - Hyper
 
-## Current Version: v0.2.0  - Engine Overhaul
+## Current Version: v0.5.0 - Collabs, Referrals, Polish
 
 ---
 
 ## Changelog
+
+### v0.5.0 - Collabs, Referrals, Polish (2026-03-11)
+
+**What shipped:**
+
+Naming and navigation cleanup, creator referral system, dashboard improvements.
+
+**Collabs rename:**
+- "Posts" renamed to "Collabs" across brand dashboard (nav tab, page title, URL)
+- Route moved from `/brand/creators` to `/brand/collabs`
+- Collabs page uses mock data with per-platform cards (IG + TikTok from same assignment show as separate collabs)
+
+**Creator referrals:**
+- New `/creator/referrals` page with QR code, referral link, copy/share buttons
+- Earnings preview table showing 25% revenue share for 2 years
+- Empty state for referred creators list
+- New "Referrals" tab in creator bottom nav (5 tabs total)
+
+**Creator dashboard:**
+- Hero metrics reordered: Earned (green), Total Collabs, Upcoming, Total HI with tooltip
+- Green color variant added to StatCard
+- Shared HiTooltip component (`components/ui/hi-tooltip.tsx`)
+- `upcomingAssignments` (invited + accepted + scheduled) added to getCreatorStats query
+
+**Copy cleanup:**
+- All em dashes and en dashes removed from every file (copy, comments, code)
+- No-em-dash rule added to CLAUDE.md
+- Unicode en dash `\u2013` replaced with hyphens in schedule display
+
+---
 
 ### v0.2.0  - Engine Overhaul (2026-03-11)
 
