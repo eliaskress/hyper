@@ -47,12 +47,14 @@ export default async function BriefingPage() {
       </Card>
 
       {/* Offer */}
-      {briefing.offerDescription && (
-        <Card className="p-4">
-          <h2 className="text-sm font-semibold text-gray-900 mb-2">What&apos;s Included</h2>
+      <Card className="p-4">
+        <h2 className="text-sm font-semibold text-gray-900 mb-2">What&apos;s Included</h2>
+        {briefing.offerDescription ? (
           <p className="text-sm text-gray-700 leading-relaxed">{briefing.offerDescription}</p>
-        </Card>
-      )}
+        ) : (
+          <p className="text-sm text-gray-400">Payment only, no additional perks. Creators will see this when reviewing your collab.</p>
+        )}
+      </Card>
 
       {/* Availability */}
       <Card className="p-4">

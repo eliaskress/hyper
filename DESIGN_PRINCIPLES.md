@@ -1,4 +1,4 @@
-# DESIGN_PRINCIPLES.md — Hyper
+# DESIGN_PRINCIPLES.md  - Hyper
 
 ## North Star
 
@@ -22,7 +22,7 @@ Every screen in Hyper has one primary action. Not two. Not a row of options. One
 Secondary information exists to support that one job, never to compete with it. If content doesn't serve the primary action, it doesn't belong on that screen.
 
 ### 2. Progress Is Always Visible
-Users should always know where they are in any process. Campaign lifecycle, application status, payout status — all of it should be legible at a glance without clicking into anything.
+Users should always know where they are in any process. Campaign lifecycle, application status, payout status  - all of it should be legible at a glance without clicking into anything.
 
 This applies to:
 - Campaign status (Draft → Active → In Review → Completed)
@@ -45,19 +45,19 @@ Avoid: long forms with many fields on one screen, required reading before action
 ### 4. Earn Trust Through Transparency
 Both sides of every deal are trusting Hyper with their time and money. Design should reinforce that trust, not exploit it.
 
-- Show real payout amounts everywhere — no hidden fees revealed at checkout.
+- Show real payout amounts everywhere  - no hidden fees revealed at checkout.
 - Surface the 40/40/20 revenue split clearly in merchant campaign creation, not as fine print.
 - Show creator HIG score and completion rate before a merchant commits.
 - Show merchant verification status before a creator applies.
 - Never use dark patterns: no pre-checked boxes, no fake scarcity, no confusing cancellation flows.
 
 ### 5. Delight Is in the Details
-Hyper's core experience should be fast and functional. But the details — the micro-animations, the copy in empty states, the confetti when a payout hits — those make it feel alive.
+Hyper's core experience should be fast and functional. But the details  - the micro-animations, the copy in empty states, the confetti when a payout hits  - those make it feel alive.
 
 Delight should be:
-- **Earned** — triggered by real moments (first payout, 10th campaign, first repeat booking)
-- **Brief** — never blocking or demanding attention
-- **Honest** — reflects something real the user accomplished, not a manufactured milestone
+- **Earned**  - triggered by real moments (first payout, 10th campaign, first repeat booking)
+- **Brief**  - never blocking or demanding attention
+- **Honest**  - reflects something real the user accomplished, not a manufactured milestone
 
 Avoid: animations that slow things down, achievement popups that interrupt workflows, notifications that don't require action.
 
@@ -71,18 +71,18 @@ Hyper is modern, confident, and grounded. Not corporate. Not pastel startup. Not
 It should feel like something a 26-year-old creator would actually want on their phone, and that a restaurant owner would feel is serious enough to trust with their money.
 
 ### Color
-- **Primary:** A bold, saturated accent (electric blue or deep violet — to be finalized in design system)
+- **Primary:** A bold, saturated accent (electric blue or deep violet  - to be finalized in design system)
 - **Neutral base:** Near-black backgrounds for dark mode, clean white for light mode
-- **Success:** Green — for completed, paid, verified states
-- **Warning:** Amber — for pending, awaiting action states
-- **Error:** Red — used sparingly, only for real errors
+- **Success:** Green  - for completed, paid, verified states
+- **Warning:** Amber  - for pending, awaiting action states
+- **Error:** Red  - used sparingly, only for real errors
 
 Color should carry meaning. Don't use the primary accent for decoration.
 
 ### Typography
 - One typeface family throughout (sans-serif, legible at small sizes)
 - Type hierarchy is strict: there should never be more than 3 text sizes on one screen
-- Numbers — payouts, follower counts, HI, HIG scores — should be visually prominent. Make the money feel real.
+- Numbers  - payouts, follower counts, HI, HIG scores  - should be visually prominent. Make the money feel real.
 
 ### Iconography
 - Use icons to reinforce meaning, never to replace labels
@@ -90,7 +90,7 @@ Color should carry meaning. Don't use the primary accent for decoration.
 - Consistent icon set; no mixing styles
 
 ### Spacing
-- Generous internal padding on cards and list items — nothing feels cramped
+- Generous internal padding on cards and list items  - nothing feels cramped
 - Consistent spacing scale (8pt grid)
 - Touch targets minimum 44x44pt
 
@@ -111,7 +111,7 @@ Hyper is primarily a mobile experience.
 ## Gamification Design
 
 ### HIG (Hyper Influence Graph) Score
-Each creator receives a HIG score (0–100) that determines campaign allocation priority. HIG is the primary reputation metric — it replaces traditional XP systems.
+Each creator receives a HIG score (0-100) that determines campaign allocation priority. HIG is the primary reputation metric  - it replaces traditional XP systems.
 
 HIG components:
 
@@ -130,15 +130,15 @@ Merchants also have a trust score that improves with successful campaigns, fair 
 Badges are specific, earned for real actions, and displayed on profiles to build trust between parties.
 
 Examples:
-- "Fast Responder" — responds to applications within 24hr (merchant)
-- "On-Time Creator" — submits content before deadline (creator)
-- "Repeat Partner" — booked by same merchant 3+ times (creator)
-- "Local Champion" — 10 campaigns completed in the same city
+- "Fast Responder"  - responds to applications within 24hr (merchant)
+- "On-Time Creator"  - submits content before deadline (creator)
+- "Repeat Partner"  - booked by same merchant 3+ times (creator)
+- "Local Champion"  - 10 campaigns completed in the same city
 
-Badges should mean something to the other side of the deal — they're signals of reliability, not vanity points.
+Badges should mean something to the other side of the deal  - they're signals of reliability, not vanity points.
 
 ### Notifications and Progress
-- HIG score progress should be visible on the dashboard — always show the gap
+- HIG score progress should be visible on the dashboard  - always show the gap
 - Payout milestones surfaced as moments: "$500 total earned. You're building real income."
 - Campaign completion triggers a summary card: HI generated, earnings breakdown, badge progress
 
@@ -154,7 +154,7 @@ Every empty state should:
 3. Give them one clear thing to do about it
 
 Examples:
-- No campaigns available: "Nothing matching right now. New campaigns post daily — check back or adjust your filters."
+- No campaigns available: "Nothing matching right now. New campaigns post daily  - check back or adjust your filters."
 - No applications yet (merchant): "No one's applied yet. Share your campaign to get more eyes on it."
 - New user dashboard: "You're all set. Browse campaigns and find your first one."
 
@@ -175,9 +175,9 @@ Examples:
 
 These patterns are explicitly off-limits:
 
-- **Infinite scroll on campaign lists** — paginate with clear control. Users should be able to find their place.
-- **Auto-playing video** — never without user intent
-- **Notification spam** — only notify for actions that require a response
-- **Forced social sharing** — achievements can be shared, never required to claim
-- **Dark mode paywalls** — don't hide core functionality behind upgrade prompts mid-task
-- **Fake review systems** — ratings must be earned from real completed campaigns only
+- **Infinite scroll on campaign lists**  - paginate with clear control. Users should be able to find their place.
+- **Auto-playing video**  - never without user intent
+- **Notification spam**  - only notify for actions that require a response
+- **Forced social sharing**  - achievements can be shared, never required to claim
+- **Dark mode paywalls**  - don't hide core functionality behind upgrade prompts mid-task
+- **Fake review systems**  - ratings must be earned from real completed campaigns only

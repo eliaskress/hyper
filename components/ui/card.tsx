@@ -17,20 +17,22 @@ export function StatCard({
   label,
   value,
   accent,
+  color,
 }: {
   label: string;
   value: string | number;
   accent?: boolean;
+  color?: "green";
 }) {
+  const bg = color === "green"
+    ? "bg-green-600 text-white"
+    : accent
+      ? "bg-black text-white"
+      : "bg-white border border-gray-100 shadow-sm";
+
   return (
-    <div
-      className={`rounded-2xl p-5 ${
-        accent
-          ? "bg-black text-white"
-          : "bg-white border border-gray-100 shadow-sm"
-      }`}
-    >
-      <p className={`text-xs font-medium uppercase tracking-wider mb-1 ${accent ? "text-gray-400" : "text-gray-400"}`}>
+    <div className={`rounded-2xl p-5 ${bg}`}>
+      <p className={`text-xs font-medium uppercase tracking-wider mb-1 ${accent || color ? "text-white/60" : "text-gray-400"}`}>
         {label}
       </p>
       <p className="text-2xl font-bold tracking-tight">{value}</p>

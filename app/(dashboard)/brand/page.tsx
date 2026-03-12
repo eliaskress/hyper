@@ -31,7 +31,7 @@ export default async function BrandDashboard() {
         </div>
       </div>
 
-      {/* Campaign Status — Budget → Spend → HI */}
+      {/* Campaign Status - Budget > Spend > HI */}
       {briefing && await (async () => {
         const budgetHi = parseFloat(briefing.budgetHi);
         const spendingLimit = budgetHi * PRICE_PER_HI;
@@ -105,11 +105,11 @@ export default async function BrandDashboard() {
             </div>
           </Card>
         </Link>
-        <Link href="/brand/creators" className="block">
+        <Link href="/brand/collabs" className="block">
           <Card className="hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold">Posts</h3>
+                <h3 className="text-sm font-semibold">Collabs</h3>
                 <p className="text-xs text-gray-500 mt-0.5">Creator content for your restaurant</p>
               </div>
               <span className="text-gray-400">&rarr;</span>

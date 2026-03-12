@@ -55,6 +55,7 @@ export async function getCreatorStats(userId: string) {
     .select({
       total: count(),
       accepted: count(sql`CASE WHEN ${assignments.status} IN ('accepted','scheduled','posted','measured','paid') THEN 1 END`),
+      upcoming: count(sql`CASE WHEN ${assignments.status} IN ('invited','accepted','scheduled') THEN 1 END`),
       paid: count(sql`CASE WHEN ${assignments.status} = 'paid' THEN 1 END`),
     })
     .from(assignments)
@@ -77,6 +78,7 @@ export async function getCreatorStats(userId: string) {
   return {
     totalAssignments: assignmentStats?.total ?? 0,
     activeAssignments: assignmentStats?.accepted ?? 0,
+    upcomingAssignments: assignmentStats?.upcoming ?? 0,
     completedAssignments: assignmentStats?.paid ?? 0,
     totalEarned: earnings?.totalEarned ?? "0",
     totalHi: earnings?.totalHi ?? "0",

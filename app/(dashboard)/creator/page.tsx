@@ -4,6 +4,7 @@ import { getCreatorStats, getCreatorAssignments } from "@/lib/db/queries";
 import { Card, StatCard } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { HiEarnings } from "@/components/ui/hi-display";
+import { HiTooltip } from "@/components/ui/hi-tooltip";
 import Link from "next/link";
 
 const DEMO_CREATOR_ID = "00000000-0000-0000-0000-000000000001";
@@ -20,10 +21,16 @@ export default async function InfluencerHome() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-10">
-        <StatCard label="Collabs" value={stats.totalAssignments} />
-        <StatCard label="Completed" value={stats.completedAssignments} />
-        <StatCard label="Earned" value={`$${stats.totalEarned}`} accent />
-        <StatCard label="Total HI" value={parseFloat(stats.totalHi).toFixed(1)} />
+        <StatCard label="Earned" value={`$${stats.totalEarned}`} color="green" />
+        <StatCard label="Total Collabs" value={stats.completedAssignments} />
+        <StatCard label="Upcoming" value={stats.upcomingAssignments} />
+        <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-1.5 mb-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Total HI</p>
+            <HiTooltip />
+          </div>
+          <p className="text-2xl font-bold tracking-tight">{parseFloat(stats.totalHi).toFixed(1)}</p>
+        </div>
       </div>
 
       <div className="flex items-center justify-between mb-4">

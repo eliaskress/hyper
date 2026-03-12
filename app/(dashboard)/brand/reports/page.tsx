@@ -138,7 +138,7 @@ export default async function ReportsPage() {
                 <MetricsInput assignmentId={post.assignmentId} />
               ) : (
                 <div className="bg-amber-50 rounded-lg p-3 mt-2 text-sm text-amber-700">
-                  Awaiting measurement — metrics will be captured 7 days after posting
+                  Awaiting measurement. Metrics will be captured 7 days after posting.
                 </div>
               )}
             </Card>
@@ -159,7 +159,7 @@ export default async function ReportsPage() {
           messages={[
             {
               from: "hyper",
-              text: `${brand.businessName} — Weekly Report\n\nHI delivered: ${totalHi.toFixed(1)}\nEngagements: ${totalEngagements.toLocaleString()}\nReach: ${totalReach.toLocaleString()}\n\nYour campaign is running.`,
+              text: `${brand.businessName} - Weekly Report\n\nHI delivered: ${totalHi.toFixed(1)}\nEngagements: ${totalEngagements.toLocaleString()}\nReach: ${totalReach.toLocaleString()}\n\nYour campaign is running.`,
               time: "9:00 AM",
             },
           ]}

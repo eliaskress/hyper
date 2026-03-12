@@ -142,7 +142,7 @@ function AssignmentCard({ assignment: a }: { assignment: Awaited<ReturnType<type
               day: "numeric",
             })}
             {a.scheduleTimeStart && ` at ${a.scheduleTimeStart}`}
-            {a.scheduleType === "flexible" && a.scheduleTimeEnd && `\u2013${a.scheduleTimeEnd}`}
+            {a.scheduleType === "flexible" && a.scheduleTimeEnd && `-${a.scheduleTimeEnd}`}
           </div>
         )}
 

@@ -158,7 +158,7 @@ async function seed() {
     .values({
       id: "00000000-0000-0000-0000-000000003001",
       brandId: bacio.id,
-      contentBrief: "Post a Reel or Story featuring our gelato. Show the vibe — outdoor seating, friends, golden hour. Tag @baciodilatte.",
+      contentBrief: "Post a Reel or Story featuring our gelato. Show the vibe  - outdoor seating, friends, golden hour. Tag @baciodilatte.",
       offerDescription: "Free gelato for two (any flavors) + two drinks. Up to $35 value.",
       availabilityDays: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
       availabilityMeals: ["lunch", "dinner"],
@@ -174,8 +174,8 @@ async function seed() {
     .values({
       id: "00000000-0000-0000-0000-000000003002",
       brandId: taqueria.id,
-      contentBrief: "Grab our signature Al Pastor tacos and post about it. Authentic vibes only — no scripted content. Show what makes our tacos worth the trip.",
-      offerDescription: "Free meal for one — any taco plate + drink. Up to $25 value.",
+      contentBrief: "Grab our signature Al Pastor tacos and post about it. Authentic vibes only  - no scripted content. Show what makes our tacos worth the trip.",
+      offerDescription: "Free meal for one  - any taco plate + drink. Up to $25 value.",
       availabilityDays: ["tuesday", "thursday", "friday", "saturday"],
       availabilityMeals: ["lunch", "dinner"],
       budgetHi: "30.00",
@@ -191,7 +191,7 @@ async function seed() {
       id: "00000000-0000-0000-0000-000000003003",
       brandId: sakura.id,
       contentBrief: "Bring someone special, order the tonkotsu, and capture the moment. Cozy, real, delicious content. Story or Reel, your choice.",
-      offerDescription: "Dinner for two on us — ramen, appetizer, and drinks. Up to $60 value.",
+      offerDescription: "Dinner for two on us  - ramen, appetizer, and drinks. Up to $60 value.",
       availabilityDays: ["friday", "saturday", "sunday"],
       availabilityMeals: ["dinner"],
       budgetHi: "20.00",
@@ -211,7 +211,7 @@ async function seed() {
   const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
 
-  // Maria — paid assignment for Bacio (completed full cycle)
+  // Maria  - paid assignment for Bacio (completed full cycle)
   const [assignment1] = await db
     .insert(schema.assignments)
     .values({
@@ -229,7 +229,7 @@ async function seed() {
     })
     .returning();
 
-  // Maria — measured assignment for Taqueria (awaiting payout)
+  // Maria  - measured assignment for Taqueria (awaiting payout)
   const [assignment2] = await db
     .insert(schema.assignments)
     .values({
@@ -247,7 +247,7 @@ async function seed() {
     })
     .returning();
 
-  // Maria — scheduled upcoming visit for Bacio
+  // Maria  - scheduled upcoming visit for Bacio
   const [assignment3] = await db
     .insert(schema.assignments)
     .values({
@@ -265,7 +265,7 @@ async function seed() {
     })
     .returning();
 
-  // Jake — paid assignment for Bacio (completed)
+  // Jake  - paid assignment for Bacio (completed)
   const [assignment4] = await db
     .insert(schema.assignments)
     .values({
@@ -283,7 +283,7 @@ async function seed() {
     })
     .returning();
 
-  // Jake — paid assignment for Taqueria
+  // Jake  - paid assignment for Taqueria
   const [assignment5] = await db
     .insert(schema.assignments)
     .values({
@@ -301,7 +301,7 @@ async function seed() {
     })
     .returning();
 
-  // Sofia — invited for Sakura (hasn't accepted yet)
+  // Sofia  - invited for Sakura (hasn't accepted yet)
   await db.insert(schema.assignments).values({
     id: "00000000-0000-0000-0000-000000004006",
     briefingId: briefing3.id,
@@ -311,7 +311,7 @@ async function seed() {
     role: "originator",
   });
 
-  // Sofia — posted for Bacio (awaiting measurement)
+  // Sofia  - posted for Bacio (awaiting measurement)
   const [assignment7] = await db
     .insert(schema.assignments)
     .values({
@@ -329,7 +329,7 @@ async function seed() {
     })
     .returning();
 
-  // Maria — invited for Sakura
+  // Maria  - invited for Sakura
   await db.insert(schema.assignments).values({
     id: "00000000-0000-0000-0000-000000004008",
     briefingId: briefing3.id,

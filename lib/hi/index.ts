@@ -1,5 +1,5 @@
 /**
- * Hyper Impact (HI) — Core metric for measuring influence.
+ * Hyper Impact (HI)  - Core metric for measuring influence.
  *
  * Formula: HI = 100 * (L + 2C + 6S + 8SH) / R
  *

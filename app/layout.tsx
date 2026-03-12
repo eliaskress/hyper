@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hyper — Micro-Influencer Marketplace",
+  title: "Hyper - Micro-Influencer Marketplace",
   description: "Connect local businesses with micro-influencers for paid marketing opportunities.",
 };
 

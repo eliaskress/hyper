@@ -292,7 +292,7 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
                 <span className="text-sm font-medium text-gray-600 shrink-0 ml-3">
                   {isPrimary && profile.followersCount
                     ? profile.followersCount.toLocaleString()
-                    : "—"}
+                    : "-"}
                 </span>
               </div>
             );
@@ -396,7 +396,7 @@ function PaymentsTab({ profile }: { profile: Profile }) {
           {[
             { step: "1", text: "Hyper matches you with a collab" },
             { step: "2", text: "Visit, create content, and post" },
-            { step: "3", text: "Send analytics 7 days later — HI is calculated" },
+            { step: "3", text: "Send analytics 7 days later and HI is calculated" },
             { step: "4", text: "Earn $4/HI (40% creator share of $10/HI)" },
           ].map((item) => (
             <div key={item.step} className="flex gap-3 items-start">

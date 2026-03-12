@@ -1,16 +1,16 @@
-# CLAUDE.md — Hyper
+# CLAUDE.md  - Hyper
 
 ## What Hyper Is
 
-Hyper is an AI-operated influence network that connects restaurants with local micro-creators for paid marketing campaigns. Creators post content about a restaurant, Hyper measures the impact using a proprietary metric called HI (Hyper Influence) — a weighted engagement formula combining reach and engagement signals — and everyone gets paid based on verified influence generated.
+Hyper is an AI-operated influence network that connects restaurants with local micro-creators for paid marketing campaigns. Creators post content about a restaurant, Hyper measures the impact using a proprietary metric called HI (Hyper Influence)  - a weighted engagement formula combining reach and engagement signals  - and everyone gets paid based on verified influence generated.
 
 The primary interface is WhatsApp. Creators join through a WhatsApp onboarding flow, verify their social profiles, and manage campaigns conversationally. Restaurants onboard the same way. The web dashboard (this codebase) is the secondary management interface and admin view.
 
-A set of AI agents handle the operational workflow end-to-end: onboarding, campaign design, creator allocation, metrics extraction, reporting, and payout preparation. Deterministic code — not agents — handles financial logic: HI calculation, payout math, and referral eligibility.
+A set of AI agents handle the operational workflow end-to-end: onboarding, campaign design, creator allocation, metrics extraction, reporting, and payout preparation. Deterministic code  - not agents  - handles financial logic: HI calculation, payout math, and referral eligibility.
 
 Hyper launches in **Los Angeles** with 20 restaurants and 50 creators. The goal is fast execution, clean data capture, reliable HI measurement, and a repeatable campaign flow.
 
-The long-term moat is the **Influence Graph** — a foundational dataset mapping how influence propagates across creators, audiences, and merchants.
+The long-term moat is the **Influence Graph**  - a foundational dataset mapping how influence propagates across creators, audiences, and merchants.
 
 ---
 
@@ -82,7 +82,7 @@ hyper/
 
 ---
 
-## Core Metric — HI (Hyper Influence)
+## Core Metric  - HI (Hyper Influence)
 
 ```
 HI = 100 × (L + 2C + 6S + 8SH) / R
@@ -105,7 +105,7 @@ Where: L = Likes, C = Comments, S = Saves, SH = Shares, R = Reach (unique users,
 
 ### HIG (Hyper Influence Grade)
 
-Creators are ranked 0–100, weighted by:
+Creators are ranked 0-100, weighted by:
 - HI performance (50%)
 - Amplification effectiveness (20%)
 - Reliability (20%)
@@ -120,12 +120,12 @@ Higher HIG = priority access to better campaigns.
 6 tables, 6 enums. Schema defined in `lib/db/schema.ts`.
 
 ```
-users         — uuid PK, instagram_id, role, handle, avatar, followers_count, location, stripe_account_id, xp, tier
-brands        — uuid PK, user_id FK, business_name, address, verified, stripe_account_id
-campaigns     — uuid PK, brand_id FK, title, description, payout, status, deadline
-applications  — uuid PK, campaign_id FK, influencer_id FK, status, post_url, submitted_at
-payouts       — uuid PK, application_id FK, amount, status (pending/paid/cancelled), stripe_transfer_id, paid_at
-badges        — uuid PK, user_id FK, badge_type, earned_at
+users          - uuid PK, instagram_id, role, handle, avatar, followers_count, location, stripe_account_id, xp, tier
+brands         - uuid PK, user_id FK, business_name, address, verified, stripe_account_id
+campaigns      - uuid PK, brand_id FK, title, description, payout, status, deadline
+applications   - uuid PK, campaign_id FK, influencer_id FK, status, post_url, submitted_at
+payouts        - uuid PK, application_id FK, amount, status (pending/paid/cancelled), stripe_transfer_id, paid_at
+badges         - uuid PK, user_id FK, badge_type, earned_at
 ```
 
 Enums: `user_role`, `user_tier`, `campaign_status`, `application_status`, `payout_status`, `badge_type`
@@ -229,14 +229,14 @@ DATABASE_URL="postgresql://..." npx tsx lib/db/seed.ts
 
 8 agents orchestrate Hyper operations (see PRD for full specs):
 
-1. **Creator Onboarding Agent** — WhatsApp-based creator signup
-2. **Restaurant Onboarding Agent** — WhatsApp-based merchant signup
-3. **Campaign Architect Agent** — structures campaign proposals
-4. **Campaign Allocation Agent** — allocates HI across creators by HIG score
-5. **Creator Operations Agent** — sends invitations, collects post links
-6. **Metrics Extraction Agent** — parses analytics screenshots for HI inputs
-7. **Reporting Agent** — generates WhatsApp-ready campaign summaries
-8. **Payout & Ledger Agent** — prepares payout breakdowns
+1. **Creator Onboarding Agent**  - WhatsApp-based creator signup
+2. **Restaurant Onboarding Agent**  - WhatsApp-based merchant signup
+3. **Campaign Architect Agent**  - structures campaign proposals
+4. **Campaign Allocation Agent**  - allocates HI across creators by HIG score
+5. **Creator Operations Agent**  - sends invitations, collects post links
+6. **Metrics Extraction Agent**  - parses analytics screenshots for HI inputs
+7. **Reporting Agent**  - generates WhatsApp-ready campaign summaries
+8. **Payout & Ledger Agent**  - prepares payout breakdowns
 
 Agents handle orchestration/extraction/messaging. **Deterministic code** handles: HI formula, payout math, referral eligibility, campaign status transitions.
 
@@ -244,7 +244,7 @@ Agents handle orchestration/extraction/messaging. **Deterministic code** handles
 
 ## Voice & Design
 
-- Direct, warm, action-oriented — no corporate fluff, no fake urgency
+- Direct, warm, action-oriented  - no corporate fluff, no fake urgency
 - Gamification = recognition, not manipulation: real milestones, no streaks or leaderboards
 - Every screen has one job. Progress is always visible.
 - Mobile-first, built for someone with 90 seconds between other things
@@ -261,5 +261,6 @@ Agents handle orchestration/extraction/messaging. **Deterministic code** handles
 - Always use the App Router pattern (no `pages/` directory)
 - Prefer server components by default; use `"use client"` only when necessary
 - Database queries belong in `lib/db/queries/`, never inline in components
-- HI calculation and HIG scoring live in `lib/hi/` — deterministic, never agent-computed
+- HI calculation and HIG scoring live in `lib/hi/`  - deterministic, never agent-computed
+- **Never use em dashes (—) or en dashes (–) anywhere in copy, comments, or code.** Use hyphens (-), commas, periods, or colons instead.
 - Keep it simple. Hyper's north star is ease of use.

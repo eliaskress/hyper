@@ -73,7 +73,7 @@ export default async function BrandProfile() {
               </div>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed mb-3">
-              You&apos;re billed monthly based on the HI your creators generate, up to your spending limit. Limit resets on the 1st. Like ad spend — you only pay for real engagement.
+              You&apos;re billed monthly based on the HI your creators generate, up to your spending limit. Limit resets on the 1st. You only pay for real engagement.
             </p>
             <button className="w-full rounded-xl border-2 border-gray-200 py-3.5 font-semibold text-sm hover:bg-gray-50 transition-all min-h-[44px]">
               Update Card
@@ -85,7 +85,7 @@ export default async function BrandProfile() {
               Add a card to activate your campaign. You&apos;re billed monthly based on real engagement, up to your spending limit. Resets on the 1st.
             </p>
             <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-              Works like Instagram ads — add a card, set a monthly budget, Hyper handles billing. No commitments, cancel anytime.
+              Works like Instagram ads. Add a card, set a monthly budget, Hyper handles billing. No commitments, cancel anytime.
             </p>
             <button className="w-full rounded-xl bg-black text-white py-3.5 font-semibold text-sm hover:bg-gray-900 active:scale-[0.98] transition-all shadow-lg shadow-black/10 min-h-[44px]">
               Add Payment Method

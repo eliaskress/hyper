@@ -140,7 +140,7 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
         <textarea
           value={contentBrief}
           onChange={(e) => setContentBrief(e.target.value)}
-          placeholder="Describe what creators should capture — atmosphere, dishes, experience..."
+          placeholder="Describe what creators should capture: atmosphere, dishes, experience..."
           rows={4}
           className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none"
         />
@@ -156,7 +156,7 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
           rows={2}
           className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none"
         />
-        <p className="text-xs text-gray-400 mt-1">Creators see this when deciding whether to accept</p>
+        <p className="text-xs text-gray-400 mt-1">Creators see this when deciding whether to accept. Leave blank if this is a payment-only collab with no additional perks.</p>
       </div>
 
       {/* Days */}

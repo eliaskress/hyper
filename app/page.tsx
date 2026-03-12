@@ -6,7 +6,7 @@ export default function Home() {
       <div className="text-center max-w-md">
         <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-600 mb-6">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          LA Pilot — Now Live
+          LA Pilot - Now Live
         </div>
         <h1 className="text-5xl font-extrabold tracking-tight mb-4 leading-[1.1]">
           Get paid for<br />your influence.

@@ -1,5 +1,5 @@
 /**
- * WhatsApp Business API — Message templates for Hyper agent flows.
+ * WhatsApp Business API  - Message templates for Hyper agent flows.
  *
  * STUB: These templates define the message formats for all 8 agent flows.
  * Actual WhatsApp Business API integration is not yet implemented.
@@ -33,7 +33,7 @@ export const MESSAGE_TEMPLATES = {
 
   // Reporting Agent
   restaurantReport: (businessName: string, creatorsCount: number, totalHi: number, totalSpend: number) =>
-    `📊 ${businessName} — Weekly Report\n\n` +
+    `📊 ${businessName}  - Weekly Report\n\n` +
     `Creators active: ${creatorsCount}\n` +
     `HI delivered: ${totalHi.toFixed(1)}\n` +
     `Total investment: $${totalSpend.toFixed(2)}\n\n` +
@@ -44,14 +44,14 @@ export const MESSAGE_TEMPLATES = {
 
   // Restaurant Onboarding Agent
   restaurantWelcome: (businessName: string) =>
-    `Welcome to Hyper, ${businessName}! 🎯 We'll handle everything — matching creators, scheduling visits, and measuring results. You just focus on the food.`,
+    `Welcome to Hyper, ${businessName}! 🎯 We'll handle everything  - matching creators, scheduling visits, and measuring results. You just focus on the food.`,
 
   // Payout & Ledger Agent
   creatorPayoutSent: (handle: string, amount: number) =>
     `💰 ${handle}, $${amount.toFixed(2)} has been sent to your Stripe account. Thanks for creating great content!`,
 } as const;
 
-/** Stub function — will send WhatsApp message via Business API */
+/** Stub function  - will send WhatsApp message via Business API */
 export async function sendWhatsAppMessage(
   _phoneNumber: string,
   _message: string,

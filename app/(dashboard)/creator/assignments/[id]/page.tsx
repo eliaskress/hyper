@@ -53,23 +53,25 @@ export default async function AssignmentDetailPage({
       </Card>
 
       {/* What's Included */}
-      {a.offerDescription && (
-        <Card className="mb-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6" />
-                <path d="M2 8h20v4H2z" />
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900 mb-1">What&apos;s Included</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">{a.offerDescription}</p>
-            </div>
+      <Card className="mb-4">
+        <div className="flex items-start gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${a.offerDescription ? "bg-emerald-50" : "bg-gray-50"}`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={a.offerDescription ? "#059669" : "#9ca3af"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6" />
+              <path d="M2 8h20v4H2z" />
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
           </div>
-        </Card>
-      )}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900 mb-1">What&apos;s Included</h2>
+            {a.offerDescription ? (
+              <p className="text-sm text-gray-700 leading-relaxed">{a.offerDescription}</p>
+            ) : (
+              <p className="text-sm text-gray-400">Payment only, no additional perks with this collab.</p>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {/* Selected Platforms */}
       {selectedPlatforms.length > 0 && (
@@ -149,7 +151,7 @@ export default async function AssignmentDetailPage({
               </p>
               <p className="text-xs text-gray-500">
                 {a.scheduleTimeStart}
-                {a.scheduleType === "flexible" && a.scheduleTimeEnd && `\u2013${a.scheduleTimeEnd}`}
+                {a.scheduleType === "flexible" && a.scheduleTimeEnd && `-${a.scheduleTimeEnd}`}
                 {" "}
                 ({a.scheduleType === "flexible" ? "Flexible" : "Fixed"})
               </p>
@@ -197,11 +199,11 @@ export default async function AssignmentDetailPage({
                       </span>
                     </div>
                     <div className="grid grid-cols-5 gap-1 text-center text-xs">
-                      <div><p className="text-gray-500">Likes</p><p className="font-medium">{post.likes?.toLocaleString() ?? "—"}</p></div>
-                      <div><p className="text-gray-500">Cmts</p><p className="font-medium">{post.comments?.toLocaleString() ?? "—"}</p></div>
-                      <div><p className="text-gray-500">Saves</p><p className="font-medium">{post.saves?.toLocaleString() ?? "—"}</p></div>
-                      <div><p className="text-gray-500">Shares</p><p className="font-medium">{post.shares?.toLocaleString() ?? "—"}</p></div>
-                      <div><p className="text-gray-500">Reach</p><p className="font-medium">{post.reach?.toLocaleString() ?? "—"}</p></div>
+                      <div><p className="text-gray-500">Likes</p><p className="font-medium">{post.likes?.toLocaleString() ?? "-"}</p></div>
+                      <div><p className="text-gray-500">Cmts</p><p className="font-medium">{post.comments?.toLocaleString() ?? "-"}</p></div>
+                      <div><p className="text-gray-500">Saves</p><p className="font-medium">{post.saves?.toLocaleString() ?? "-"}</p></div>
+                      <div><p className="text-gray-500">Shares</p><p className="font-medium">{post.shares?.toLocaleString() ?? "-"}</p></div>
+                      <div><p className="text-gray-500">Reach</p><p className="font-medium">{post.reach?.toLocaleString() ?? "-"}</p></div>
                     </div>
                     {post.measuredAt && (
                       <p className="text-xs text-gray-400 mt-2">
@@ -211,7 +213,7 @@ export default async function AssignmentDetailPage({
                   </>
                 ) : (
                   <div className="bg-amber-50 rounded-lg p-2 text-xs text-amber-700">
-                    Awaiting measurement — metrics captured 7 days after posting
+                    Awaiting measurement. Metrics captured 7 days after posting.
                   </div>
                 )}
               </div>

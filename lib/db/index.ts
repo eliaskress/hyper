@@ -18,7 +18,7 @@ export function getDb(): DbType {
   return _db;
 }
 
-// Lazy proxy — db is only initialized on first property access (at request time, not build time)
+// Lazy proxy  - db is only initialized on first property access (at request time, not build time)
 export const db: DbType = new Proxy({} as DbType, {
   get(_target, prop, receiver) {
     const instance = getDb();

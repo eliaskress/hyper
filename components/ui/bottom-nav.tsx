@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const brandTabs = [
   { href: "/brand", label: "Home", icon: HomeIcon },
   { href: "/brand/briefing", label: "Briefing", icon: BriefingIcon },
-  { href: "/brand/creators", label: "Posts", icon: PostsIcon },
+  { href: "/brand/collabs", label: "Collabs", icon: PostsIcon },
   { href: "/brand/reports", label: "Reports", icon: ReportsIcon },
   { href: "/brand/profile", label: "Profile", icon: ProfileIcon },
 ];
@@ -15,6 +15,7 @@ const influencerTabs = [
   { href: "/creator", label: "Home", icon: HomeIcon },
   { href: "/creator/assignments", label: "Collabs", icon: AssignmentIcon },
   { href: "/creator/earnings", label: "Earnings", icon: WalletIcon },
+  { href: "/creator/referrals", label: "Referrals", icon: ReferralIcon },
   { href: "/creator/profile", label: "Profile", icon: ProfileIcon },
 ];
 
@@ -52,7 +53,7 @@ export function BottomNav() {
   );
 }
 
-// Minimal SVG icons — clean and consistent
+// Minimal SVG icons - clean and consistent
 function HomeIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -106,6 +107,17 @@ function WalletIcon({ active }: { active: boolean }) {
       <rect x="2" y="5" width="20" height="14" rx="2" />
       <path d="M16 12h.01" />
       <path d="M2 10h20" />
+    </svg>
+  );
+}
+
+function ReferralIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 00-3-3.87" />
+      <path d="M16 3.13a4 4 0 010 7.75" />
     </svg>
   );
 }
