@@ -10,31 +10,89 @@ const MEAL_TIMES: Record<string, { label: string; start: string; end: string }> 
 };
 
 const DAY_LABELS: Record<string, string> = {
-  monday: "Mon",
-  tuesday: "Tue",
-  wednesday: "Wed",
-  thursday: "Thu",
-  friday: "Fri",
-  saturday: "Sat",
-  sunday: "Sun",
+  monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu",
+  friday: "Fri", saturday: "Sat", sunday: "Sun",
 };
+
+const PLATFORMS = [
+  {
+    id: "instagram",
+    name: "Instagram",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" strokeWidth="1.8" />
+        <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.8" />
+        <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
+      </svg>
+    ),
+    color: "from-purple-500 via-pink-500 to-orange-400",
+    border: "border-pink-300",
+    activeBg: "bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400",
+    urlPlaceholder: "https://instagram.com/reel/...",
+    urlPattern: /instagram\.com/i,
+  },
+  {
+    id: "tiktok",
+    name: "TikTok",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.71a8.21 8.21 0 004.76 1.5v-3.4a4.85 4.85 0 01-1-.12z" />
+      </svg>
+    ),
+    color: "from-gray-900 to-gray-800",
+    border: "border-gray-400",
+    activeBg: "bg-gradient-to-br from-gray-900 to-gray-800",
+    urlPlaceholder: "https://tiktok.com/@user/video/...",
+    urlPattern: /tiktok\.com/i,
+  },
+  {
+    id: "youtube",
+    name: "YouTube",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 00.5 6.19 31.56 31.56 0 000 12a31.56 31.56 0 00.5 5.81 3.02 3.02 0 002.12 2.14c1.84.55 9.38.55 9.38.55s7.54 0 9.38-.55a3.02 3.02 0 002.12-2.14A31.56 31.56 0 0024 12a31.56 31.56 0 00-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z" />
+      </svg>
+    ),
+    color: "from-red-600 to-red-500",
+    border: "border-red-300",
+    activeBg: "bg-gradient-to-br from-red-600 to-red-500",
+    urlPlaceholder: "https://youtube.com/shorts/...",
+    urlPattern: /youtu(be\.com|\.be)/i,
+  },
+] as const;
 
 interface Props {
   assignmentId: string;
   status: string;
-  hasPost: boolean;
+  selectedPlatforms: string[];
+  submittedPlatforms: string[];
   hasSchedule: boolean;
   availabilityDays: string[];
   availabilityMeals: string[];
 }
 
-export function AssignmentActions({ assignmentId, status: initialStatus, hasPost, availabilityDays, availabilityMeals }: Props) {
+export function AssignmentActions({
+  assignmentId,
+  status: initialStatus,
+  selectedPlatforms: initialSelectedPlatforms,
+  submittedPlatforms,
+  availabilityDays,
+  availabilityMeals,
+}: Props) {
   const [status, setStatus] = useState(initialStatus);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(initialSelectedPlatforms);
+
+  const remainingPlatforms = selectedPlatforms.filter((p) => !submittedPlatforms.includes(p));
 
   return (
     <div className="space-y-3 mt-2">
       {status === "invited" && (
-        <AcceptDecline assignmentId={assignmentId} onAccepted={() => setStatus("accepted")} />
+        <AcceptDecline
+          assignmentId={assignmentId}
+          selectedPlatforms={selectedPlatforms}
+          onPlatformsChange={setSelectedPlatforms}
+          onAccepted={() => setStatus("accepted")}
+        />
       )}
       {(status === "accepted" || status === "scheduled") && (
         <ScheduleVisit
@@ -45,28 +103,54 @@ export function AssignmentActions({ assignmentId, status: initialStatus, hasPost
           isReschedule={status === "scheduled"}
         />
       )}
-      {(status === "accepted" || (status === "scheduled" && !hasPost)) && (
-        <SubmitPost assignmentId={assignmentId} />
+      {(status === "accepted" || status === "scheduled") && remainingPlatforms.length > 0 && (
+        <SubmitPosts
+          assignmentId={assignmentId}
+          platforms={remainingPlatforms}
+          onAllSubmitted={() => setStatus("posted")}
+        />
       )}
     </div>
   );
 }
 
-function AcceptDecline({ assignmentId, onAccepted }: { assignmentId: string; onAccepted: () => void }) {
+function AcceptDecline({
+  assignmentId,
+  selectedPlatforms,
+  onPlatformsChange,
+  onAccepted,
+}: {
+  assignmentId: string;
+  selectedPlatforms: string[];
+  onPlatformsChange: (platforms: string[]) => void;
+  onAccepted: () => void;
+}) {
   const [loading, setLoading] = useState<"accept" | "decline" | null>(null);
   const [showDecline, setShowDecline] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
+  function togglePlatform(id: string) {
+    onPlatformsChange(
+      selectedPlatforms.includes(id)
+        ? selectedPlatforms.filter((p) => p !== id)
+        : [...selectedPlatforms, id],
+    );
+  }
+
   async function handleAccept() {
+    if (selectedPlatforms.length === 0) {
+      setError("Pick at least one platform to post on.");
+      return;
+    }
     setLoading("accept");
     setError("");
     try {
       const res = await fetch("/api/assignments", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignmentId, action: "accept" }),
+        body: JSON.stringify({ assignmentId, action: "accept", selectedPlatforms }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -110,16 +194,46 @@ function AcceptDecline({ assignmentId, onAccepted }: { assignmentId: string; onA
 
   return (
     <div className="rounded-xl border-2 border-gray-100 p-4">
-      <h3 className="text-sm font-semibold mb-3">Lock in this collab</h3>
+      <h3 className="text-sm font-semibold mb-1">Lock in this collab</h3>
+      <p className="text-xs text-gray-500 mb-4">Where will you post?</p>
+
+      {/* Platform selector */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {PLATFORMS.map((platform) => {
+          const selected = selectedPlatforms.includes(platform.id);
+          return (
+            <button
+              key={platform.id}
+              type="button"
+              onClick={() => togglePlatform(platform.id)}
+              className={`relative rounded-xl p-3 flex flex-col items-center gap-1.5 transition-all duration-200 min-h-[80px] ${
+                selected
+                  ? `${platform.activeBg} text-white shadow-lg scale-[1.02]`
+                  : `border-2 ${platform.border} bg-white text-gray-600 hover:shadow-md`
+              }`}
+            >
+              {selected && (
+                <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+              )}
+              {platform.icon}
+              <span className="text-[11px] font-semibold">{platform.name}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {!showDecline ? (
         <div className="flex gap-2">
           <button
             onClick={handleAccept}
-            disabled={!!loading}
+            disabled={!!loading || selectedPlatforms.length === 0}
             className="flex-1 rounded-xl bg-emerald-600 text-white py-3 font-semibold text-sm hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 min-h-[44px]"
           >
-            {loading === "accept" ? "Accepting..." : "Accept"}
+            {loading === "accept" ? "Accepting..." : `Accept${selectedPlatforms.length > 0 ? ` (${selectedPlatforms.length} platform${selectedPlatforms.length > 1 ? "s" : ""})` : ""}`}
           </button>
           <button
             onClick={() => setShowDecline(true)}
@@ -191,23 +305,14 @@ function ScheduleVisit({
 
   async function handleSchedule(e: React.FormEvent) {
     e.preventDefault();
-    if (!date) {
-      setError("Please select a date.");
-      return;
-    }
+    if (!date) { setError("Please select a date."); return; }
     if (!isDateAllowed(date)) {
       setError(`This restaurant is only available on: ${availabilityDays.map(d => DAY_LABELS[d] || d).join(", ")}`);
       return;
     }
-    if (!meal) {
-      setError("Please select a mealtime.");
-      return;
-    }
+    if (!meal) { setError("Please select a mealtime."); return; }
     const mealTime = MEAL_TIMES[meal];
-    if (!mealTime) {
-      setError("Invalid mealtime.");
-      return;
-    }
+    if (!mealTime) { setError("Invalid mealtime."); return; }
 
     setLoading(true);
     setError("");
@@ -243,9 +348,7 @@ function ScheduleVisit({
       <p className="text-xs text-gray-500 mb-3">
         Pick a day and mealtime from the restaurant&apos;s availability.
       </p>
-
       <div className="space-y-3">
-        {/* Date */}
         <div>
           <label className="text-xs text-gray-500 font-medium block mb-1">Date</label>
           <input
@@ -266,8 +369,6 @@ function ScheduleVisit({
             </p>
           )}
         </div>
-
-        {/* Mealtime */}
         <div>
           <label className="text-xs text-gray-500 font-medium block mb-1.5">Mealtime</label>
           <div className="flex gap-2">
@@ -294,7 +395,6 @@ function ScheduleVisit({
             })}
           </div>
         </div>
-
         <button
           type="submit"
           disabled={loading}
@@ -308,63 +408,110 @@ function ScheduleVisit({
   );
 }
 
-function SubmitPost({ assignmentId }: { assignmentId: string }) {
-  const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
+function SubmitPosts({
+  assignmentId,
+  platforms,
+  onAllSubmitted,
+}: {
+  assignmentId: string;
+  platforms: string[];
+  onAllSubmitted: () => void;
+}) {
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState<string[]>([]);
+  const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = url.trim();
-    if (!trimmed) {
-      setError("Please paste your post link.");
+  async function handleSubmit(platformId: string) {
+    const url = urls[platformId]?.trim();
+    if (!url) { setError("Please paste your post link."); return; }
+
+    const platform = PLATFORMS.find((p) => p.id === platformId);
+    if (platform && !platform.urlPattern.test(url)) {
+      setError(`That doesn't look like a ${platform.name} link.`);
       return;
     }
-    setLoading(true);
+
+    setLoading(platformId);
     setError("");
     try {
       const res = await fetch("/api/assignments/post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assignmentId, postUrl: trimmed }),
+        body: JSON.stringify({ assignmentId, postUrl: url, platform: platformId }),
       });
       if (!res.ok) {
         const data = await res.json();
         setError(data.error ?? "Failed to submit.");
         return;
       }
+      const newSubmitted = [...submitted, platformId];
+      setSubmitted(newSubmitted);
+      if (newSubmitted.length === platforms.length) {
+        onAllSubmitted();
+      }
       router.refresh();
     } catch {
       setError("Something went wrong.");
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
+  const remaining = platforms.filter((p) => !submitted.includes(p));
+  if (remaining.length === 0) return null;
+
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border-2 border-gray-100 p-4">
-      <h3 className="text-sm font-semibold mb-1">Submit your post</h3>
-      <p className="text-xs text-gray-500 mb-3">
-        Paste your Instagram post link. This is the source of truth for your HI calculation.
+    <div className="rounded-xl border-2 border-gray-100 p-4">
+      <h3 className="text-sm font-semibold mb-1">Submit your posts</h3>
+      <p className="text-xs text-gray-500 mb-4">
+        Add a link for each platform. Each generates its own HI score.
       </p>
-      <div className="flex gap-2">
-        <input
-          type="url"
-          placeholder="https://instagram.com/p/..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="flex-1 text-sm rounded-lg border border-gray-200 px-3 py-2.5 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent min-h-[44px]"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-xl bg-black text-white px-5 py-2.5 text-sm font-semibold hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-50 min-h-[44px]"
-        >
-          {loading ? "..." : "Submit"}
-        </button>
+      <div className="space-y-3">
+        {platforms.map((platformId) => {
+          const platform = PLATFORMS.find((p) => p.id === platformId);
+          if (!platform) return null;
+          const done = submitted.includes(platformId);
+
+          return (
+            <div key={platformId} className={`rounded-lg p-3 ${done ? "bg-emerald-50" : "bg-gray-50"}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={done ? "text-emerald-600" : "text-gray-600"}>{platform.icon}</span>
+                <span className="text-sm font-semibold">{platform.name}</span>
+                {done && (
+                  <span className="ml-auto text-xs font-medium text-emerald-600 flex items-center gap-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    Submitted
+                  </span>
+                )}
+              </div>
+              {!done && (
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder={platform.urlPlaceholder}
+                    value={urls[platformId] ?? ""}
+                    onChange={(e) => setUrls({ ...urls, [platformId]: e.target.value })}
+                    className="flex-1 text-sm rounded-lg border border-gray-200 px-3 py-2.5 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent min-h-[44px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSubmit(platformId)}
+                    disabled={loading === platformId}
+                    className="rounded-lg bg-black text-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-50 min-h-[44px]"
+                  >
+                    {loading === platformId ? "..." : "Submit"}
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
-    </form>
+    </div>
   );
 }

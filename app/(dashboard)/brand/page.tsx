@@ -1,9 +1,11 @@
-import { getBrandByUserId, getBrandStats, getBrandBriefing } from "@/lib/db/queries";
-import { Card, StatCard } from "@/components/ui/card";
+import { getBrandByUserId, getBrandStats, getBrandBriefing, getCurrentMonthHi, getAllTimeHi } from "@/lib/db/queries";
+import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { HiBudget } from "@/components/ui/hi-display";
 import { WhatsAppIndicator } from "@/components/ui/whatsapp-preview";
 import { HiBreakdown } from "./hi-breakdown";
+import { BudgetEditor } from "./budget-editor";
+import { PRICE_PER_HI } from "@/lib/hi";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -29,27 +31,46 @@ export default async function BrandDashboard() {
         </div>
       </div>
 
-      {/* Campaign Status */}
-      {briefing && (
-        <Card className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-900">Campaign Status</h2>
-            <StatusBadge status={briefing.status} />
-          </div>
-          <HiBudget
-            budgetHi={briefing.budgetHi}
-            budgetType={briefing.budgetTypeField}
-            hiDelivered={briefing.hiDelivered}
-          />
-          <p className="text-sm text-gray-600 mt-3 line-clamp-2">{briefing.contentBrief}</p>
-        </Card>
-      )}
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <StatCard label="Creators Matched" value={stats.creatorsMatched} />
-        <StatCard label="HI Allocated" value={parseFloat(stats.hiAllocated).toFixed(1)} />
-      </div>
+      {/* Campaign Status — Budget → Spend → HI */}
+      {briefing && await (async () => {
+        const budgetHi = parseFloat(briefing.budgetHi);
+        const spendingLimit = budgetHi * PRICE_PER_HI;
+        const monthHi = await getCurrentMonthHi(briefing.id);
+        const monthSpent = monthHi * PRICE_PER_HI;
+        const allTimeHi = await getAllTimeHi(briefing.id);
+        const allTimeSpent = allTimeHi * PRICE_PER_HI;
+        const monthName = new Date().toLocaleDateString("en-US", { month: "long" });
+        return (
+          <Card className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-900">Campaign Status</h2>
+              <StatusBadge status={briefing.status} />
+            </div>
+            {/* Monthly budget */}
+            <div className="text-center mb-3">
+              <p className="text-xs text-gray-500 mb-0.5">Monthly spending limit</p>
+              <p className="text-2xl font-extrabold">${spendingLimit.toFixed(0)}<span className="text-sm font-semibold text-gray-400">/mo</span></p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                ${monthSpent.toFixed(0)} spent in {monthName}
+              </p>
+            </div>
+            <HiBudget
+              budgetHi={briefing.budgetHi}
+              hiDelivered={monthHi.toFixed(2)}
+            />
+            <p className="text-xs text-gray-400 text-center mt-1">Resets on the 1st of each month</p>
+            {/* Total spend */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-500">Total spent (all time)</span>
+              <span className="text-sm font-bold">${allTimeSpent.toFixed(0)}</span>
+            </div>
+            <BudgetEditor
+              briefingId={briefing.id}
+              currentBudgetHi={briefing.budgetHi}
+            />
+          </Card>
+        );
+      })()}
 
       {/* HI Delivered with engagement breakdown */}
       <HiBreakdown
@@ -88,8 +109,8 @@ export default async function BrandDashboard() {
           <Card className="hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold">Matched Creators</h3>
-                <p className="text-xs text-gray-500 mt-0.5">See who Hyper assigned to your restaurant</p>
+                <h3 className="text-sm font-semibold">Posts</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Creator content for your restaurant</p>
               </div>
               <span className="text-gray-400">&rarr;</span>
             </div>

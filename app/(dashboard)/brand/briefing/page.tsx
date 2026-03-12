@@ -1,9 +1,7 @@
 import { getBrandByUserId, getBrandBriefing } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { HiBudget } from "@/components/ui/hi-display";
 import { WhatsAppPreview } from "@/components/ui/whatsapp-preview";
-import { PRICE_PER_HI } from "@/lib/hi";
 import { BriefingForm } from "./briefing-form";
 import { BriefingStatusToggle } from "./briefing-status-toggle";
 
@@ -28,8 +26,6 @@ export default async function BriefingPage() {
     );
   }
 
-  const budgetHi = parseFloat(briefing.budgetHi);
-  const totalUsd = budgetHi * PRICE_PER_HI;
   const days = (briefing.availabilityDays as string[]) ?? [];
   const meals = (briefing.availabilityMeals as string[]) ?? [];
 
@@ -43,27 +39,6 @@ export default async function BriefingPage() {
           <StatusBadge status={briefing.status} />
         </div>
       </div>
-
-      {/* Budget */}
-      <Card className="p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-3">Budget</h2>
-        <HiBudget
-          budgetHi={briefing.budgetHi}
-          budgetType={briefing.budgetTypeField}
-          hiDelivered={briefing.hiDelivered}
-        />
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <span className="text-gray-500">Budget</span>
-            <p className="font-medium">{budgetHi} HI = ${totalUsd.toFixed(0)}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">Type</span>
-            <p className="font-medium capitalize">{briefing.budgetTypeField.replace("_", " ")}</p>
-          </div>
-        </div>
-
-      </Card>
 
       {/* Content Brief */}
       <Card className="p-4">
@@ -133,7 +108,6 @@ export default async function BriefingPage() {
             availabilityDays: days,
             availabilityMeals: meals,
             budgetHi: briefing.budgetHi,
-            budgetType: briefing.budgetTypeField,
           }}
         />
       </Card>

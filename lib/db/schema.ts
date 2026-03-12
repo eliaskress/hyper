@@ -125,6 +125,7 @@ export const assignments = pgTable('assignments', {
   scheduleTypeField: scheduleType('schedule_type'),
   scheduleTimeStart: varchar('schedule_time_start'),
   scheduleTimeEnd: varchar('schedule_time_end'),
+  selectedPlatforms: jsonb('selected_platforms').$type<string[]>(),
   role: varchar('role').default('originator'),
   declineReason: text('decline_reason'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

@@ -18,20 +18,30 @@ interface BriefingData {
   availabilityDays?: string[];
   availabilityMeals?: string[];
   budgetHi?: string;
-  budgetType?: string;
+}
+
+function hiFromUsd(usd: number) {
+  return usd / PRICE_PER_HI;
 }
 
 export function BriefingForm({ existing }: { existing?: BriefingData }) {
   const isEdit = !!existing?.id;
+  const existingUsd = existing?.budgetHi
+    ? (parseFloat(existing.budgetHi) * PRICE_PER_HI).toString()
+    : "";
+
+  const [budgetUsd, setBudgetUsd] = useState(existingUsd);
   const [contentBrief, setContentBrief] = useState(existing?.contentBrief ?? "");
   const [offerDescription, setOfferDescription] = useState(existing?.offerDescription ?? "");
   const [days, setDays] = useState<string[]>(existing?.availabilityDays ?? []);
   const [meals, setMeals] = useState<string[]>(existing?.availabilityMeals ?? []);
-  const [budgetHi, setBudgetHi] = useState(existing?.budgetHi ?? "");
-  const [budgetType, setBudgetType] = useState(existing?.budgetType ?? "per_engagement");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showHiTooltip, setShowHiTooltip] = useState(false);
   const router = useRouter();
+
+  const usdNum = parseFloat(budgetUsd) || 0;
+  const budgetHi = hiFromUsd(usdNum);
 
   function toggleDay(day: string) {
     setDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
@@ -41,19 +51,19 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
     setMeals((prev) => prev.includes(meal) ? prev.filter((m) => m !== meal) : [...prev, meal]);
   }
 
-  const budgetUsd = budgetHi ? (parseFloat(budgetHi) * PRICE_PER_HI) : 0;
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    const hiValue = budgetHi.toFixed(2);
+
     try {
       const url = "/api/briefings";
       const method = isEdit ? "PATCH" : "POST";
       const payload = isEdit
-        ? { briefingId: existing!.id, contentBrief, offerDescription: offerDescription || undefined, availabilityDays: days, availabilityMeals: meals, budgetHi, budgetType }
-        : { contentBrief, offerDescription: offerDescription || undefined, availabilityDays: days, availabilityMeals: meals, budgetHi, budgetType };
+        ? { briefingId: existing!.id, contentBrief, offerDescription: offerDescription || undefined, availabilityDays: days, availabilityMeals: meals, budgetHi: hiValue }
+        : { contentBrief, offerDescription: offerDescription || undefined, availabilityDays: days, availabilityMeals: meals, budgetHi: hiValue };
 
       const res = await fetch(url, {
         method,
@@ -77,6 +87,53 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Budget */}
+      <div>
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <label className="text-sm font-semibold text-gray-900">Monthly limit ($)</label>
+          <div className="relative">
+            <button
+              type="button"
+              onMouseEnter={() => setShowHiTooltip(true)}
+              onMouseLeave={() => setShowHiTooltip(false)}
+              onClick={() => setShowHiTooltip((v) => !v)}
+              className="w-4 h-4 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-bold hover:bg-gray-300 transition-colors"
+              aria-label="What is HI?"
+            >
+              ?
+            </button>
+            {showHiTooltip && (
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-gray-900 text-white text-xs rounded-xl p-3 shadow-lg z-10 leading-relaxed">
+                <p className="font-semibold mb-1">How HI works</p>
+                <p className="mb-1.5">HI (Hyper Influence) measures real engagement impact:</p>
+                <p className="font-mono text-[11px] bg-white/10 rounded-lg px-2 py-1 mb-1.5">
+                  HI = 100 &times; (Likes + 2&times;Comments + 6&times;Saves + 8&times;Shares) / Reach
+                </p>
+                <p>Your budget in dollars is converted at <span className="font-semibold">${PRICE_PER_HI}/HI</span>. Creators earn 40% of each HI unit they generate.</p>
+                <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-900" />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
+          <input
+            type="number"
+            step="1"
+            min="10"
+            value={budgetUsd}
+            onChange={(e) => setBudgetUsd(e.target.value)}
+            placeholder="e.g. 500"
+            className="w-full text-sm rounded-xl border border-gray-200 pl-7 pr-3 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent min-h-[44px]"
+          />
+        </div>
+        {usdNum > 0 && (
+          <p className="text-xs text-gray-500 mt-1">
+            ${usdNum.toFixed(0)} = <span className="font-semibold">{budgetHi.toFixed(1)} HI</span> at ${PRICE_PER_HI}/HI
+          </p>
+        )}
+      </div>
+
       {/* Content Brief */}
       <div>
         <label className="text-sm font-semibold text-gray-900 block mb-1.5">Content Brief</label>
@@ -139,49 +196,6 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
               }`}
             >
               {meal}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Budget */}
-      <div>
-        <label className="text-sm font-semibold text-gray-900 block mb-1.5">Budget (HI)</label>
-        <input
-          type="number"
-          step="0.01"
-          min="1"
-          value={budgetHi}
-          onChange={(e) => setBudgetHi(e.target.value)}
-          placeholder="e.g. 50"
-          className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent min-h-[44px]"
-        />
-        {budgetHi && budgetUsd > 0 && (
-          <p className="text-xs text-gray-500 mt-1">
-            {budgetHi} HI = <span className="font-semibold">${budgetUsd.toFixed(0)}</span> at ${PRICE_PER_HI}/HI
-          </p>
-        )}
-      </div>
-
-      {/* Budget Type */}
-      <div>
-        <label className="text-sm font-semibold text-gray-900 block mb-2">Budget Type</label>
-        <div className="flex gap-2">
-          {[
-            { value: "per_engagement", label: "Per Engagement" },
-            { value: "monthly", label: "Monthly" },
-          ].map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setBudgetType(opt.value)}
-              className={`flex-1 text-sm py-2.5 rounded-lg font-semibold transition-all min-h-[44px] ${
-                budgetType === opt.value
-                  ? "bg-black text-white"
-                  : "border-2 border-gray-200 text-gray-500 hover:border-gray-400"
-              }`}
-            >
-              {opt.label}
             </button>
           ))}
         </div>

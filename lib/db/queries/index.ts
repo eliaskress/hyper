@@ -5,7 +5,7 @@ import { eq, desc, count, sum, avg, sql, and } from "drizzle-orm";
 // ── Creator Queries ─────────────────────────────────────────────────
 
 export async function getCreatorAssignments(userId: string) {
-  return db
+  const rows = await db
     .select({
       id: assignments.id,
       status: assignments.status,
@@ -30,6 +30,24 @@ export async function getCreatorAssignments(userId: string) {
     .leftJoin(posts, eq(posts.assignmentId, assignments.id))
     .where(eq(assignments.creatorId, userId))
     .orderBy(desc(assignments.createdAt));
+
+  // Deduplicate: one row per assignment, summing HI across posts
+  const seen = new Map<string, typeof rows[number]>();
+  for (const row of rows) {
+    const existing = seen.get(row.id);
+    if (!existing) {
+      seen.set(row.id, row);
+    } else if (row.hiCalculated) {
+      const prevHi = parseFloat(existing.hiCalculated ?? "0");
+      const thisHi = parseFloat(row.hiCalculated);
+      seen.set(row.id, {
+        ...existing,
+        hiCalculated: (prevHi + thisHi).toFixed(2),
+        postUrl: existing.postUrl ?? row.postUrl,
+      });
+    }
+  }
+  return Array.from(seen.values());
 }
 
 export async function getCreatorStats(userId: string) {
@@ -274,11 +292,12 @@ export async function getAssignmentById(assignmentId: string) {
 }
 
 export async function getAssignmentDetail(assignmentId: string) {
-  const [result] = await db
+  const rows = await db
     .select({
       id: assignments.id,
       status: assignments.status,
       allocatedHi: assignments.allocatedHi,
+      selectedPlatforms: assignments.selectedPlatforms,
       scheduledDate: assignments.scheduledDate,
       scheduleType: assignments.scheduleTypeField,
       scheduleTimeStart: assignments.scheduleTimeStart,
@@ -293,6 +312,7 @@ export async function getAssignmentDetail(assignmentId: string) {
       businessName: brands.businessName,
       address: brands.address,
       verified: brands.verified,
+      postId: posts.id,
       postUrl: posts.postUrl,
       postPlatform: posts.platform,
       likes: posts.likes,
@@ -309,7 +329,47 @@ export async function getAssignmentDetail(assignmentId: string) {
     .innerJoin(brands, eq(briefings.brandId, brands.id))
     .leftJoin(posts, eq(posts.assignmentId, assignments.id))
     .where(eq(assignments.id, assignmentId));
-  return result ?? null;
+
+  if (rows.length === 0) return null;
+
+  const first = rows[0];
+  const assignmentPosts = rows
+    .filter((r) => r.postId !== null)
+    .map((r) => ({
+      id: r.postId!,
+      platform: r.postPlatform!,
+      postUrl: r.postUrl,
+      likes: r.likes,
+      comments: r.comments,
+      saves: r.saves,
+      shares: r.shares,
+      reach: r.reach,
+      hiCalculated: r.hiCalculated,
+      postedAt: r.postedAt,
+      measuredAt: r.measuredAt,
+    }));
+
+  return {
+    id: first.id,
+    status: first.status,
+    allocatedHi: first.allocatedHi,
+    selectedPlatforms: (first.selectedPlatforms as string[]) ?? [],
+    scheduledDate: first.scheduledDate,
+    scheduleType: first.scheduleType,
+    scheduleTimeStart: first.scheduleTimeStart,
+    scheduleTimeEnd: first.scheduleTimeEnd,
+    role: first.role,
+    declineReason: first.declineReason,
+    createdAt: first.createdAt,
+    contentBrief: first.contentBrief,
+    offerDescription: first.offerDescription,
+    availabilityDays: first.availabilityDays,
+    availabilityMeals: first.availabilityMeals,
+    businessName: first.businessName,
+    address: first.address,
+    verified: first.verified,
+    posts: assignmentPosts,
+  };
 }
 
 export async function updateAssignmentStatus(
@@ -333,7 +393,6 @@ export async function createBriefing(data: {
   availabilityDays: string[];
   availabilityMeals: string[];
   budgetHi: string;
-  budgetType: "per_engagement" | "monthly";
 }) {
   const [created] = await db
     .insert(briefings)
@@ -344,7 +403,6 @@ export async function createBriefing(data: {
       availabilityDays: data.availabilityDays,
       availabilityMeals: data.availabilityMeals,
       budgetHi: data.budgetHi,
-      budgetTypeField: data.budgetType,
       status: "active",
     })
     .returning();
@@ -426,6 +484,36 @@ export async function updateBriefingHiDelivered(briefingId: string, hiToAdd: num
 async function getBrandBriefing_byId(briefingId: string) {
   const [b] = await db.select().from(briefings).where(eq(briefings.id, briefingId));
   return b ?? null;
+}
+
+/** Get HI delivered this calendar month for a briefing */
+export async function getCurrentMonthHi(briefingId: string) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [result] = await db
+    .select({ total: sum(posts.hiCalculated) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(
+      and(
+        eq(assignments.briefingId, briefingId),
+        sql`${posts.measuredAt} >= ${monthStart}`,
+      ),
+    );
+
+  return parseFloat(result?.total ?? "0");
+}
+
+/** Get all-time HI delivered for a briefing */
+export async function getAllTimeHi(briefingId: string) {
+  const [result] = await db
+    .select({ total: sum(posts.hiCalculated) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(eq(assignments.briefingId, briefingId));
+
+  return parseFloat(result?.total ?? "0");
 }
 
 // ── Payout Mutations ──────────────────────────────────────────────

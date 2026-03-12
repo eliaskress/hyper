@@ -23,7 +23,7 @@ export default function OnboardingPage() {
     }
     // Demo mode: navigate directly
     if (role === "creator") {
-      router.push("/influencer");
+      router.push("/creator");
     } else {
       router.push("/brand");
     }

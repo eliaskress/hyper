@@ -15,7 +15,7 @@ export default async function CreatorsPage() {
   if (!briefing) {
     return (
       <div className="p-4 space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">Matched Creators</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Posts</h1>
         <Card className="p-6 text-center">
           <p className="text-sm text-gray-500">Create a briefing first. Hyper will match creators automatically.</p>
         </Card>
@@ -28,9 +28,9 @@ export default async function CreatorsPage() {
   return (
     <div className="p-4 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Matched Creators</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Posts</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Hyper matched {creators.length} creator{creators.length !== 1 ? "s" : ""} to your restaurant
+          {creators.length} creator{creators.length !== 1 ? "s" : ""} matched to your restaurant
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default async function CreatorsPage() {
               </div>
             </div>
 
-            {creator.allocatedHi && (
+            {creator.allocatedHi && ["measured", "paid"].includes(creator.status) && (
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <HiDisplay hi={creator.allocatedHi} size="sm" />
               </div>

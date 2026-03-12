@@ -28,7 +28,7 @@ export default async function InfluencerHome() {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold">Your Collabs</h2>
-        <Link href="/influencer/assignments" className="text-xs text-gray-400 font-medium hover:text-gray-600">
+        <Link href="/creator/assignments" className="text-xs text-gray-400 font-medium hover:text-gray-600">
           View all &rarr;
         </Link>
       </div>
@@ -41,7 +41,7 @@ export default async function InfluencerHome() {
       ) : (
         <div className="flex flex-col gap-3">
           {assignments.map((a) => (
-            <Link key={a.id} href={`/influencer/assignments/${a.id}`} className="block">
+            <Link key={a.id} href={`/creator/assignments/${a.id}`} className="block">
               <Card className="hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1 min-w-0">

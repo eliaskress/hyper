@@ -52,29 +52,43 @@ export default async function BrandProfile() {
         )}
       </Card>
 
-      {/* Payment Plan */}
+      {/* Payment Method */}
       <Card>
-        <h2 className="font-bold mb-3">Payment Plan</h2>
+        <h2 className="font-bold mb-3">Payment Method</h2>
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-3 h-3 rounded-full ${brand.stripeAccountId ? "bg-emerald-500" : "bg-gray-300"}`} />
-          <p className="font-semibold">{brand.stripeAccountId ? "Active subscription" : "No plan set up"}</p>
+          <p className="font-semibold">{brand.stripeAccountId ? "Card on file" : "No card added"}</p>
         </div>
         {brand.stripeAccountId ? (
           <div>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Your monthly budget is billed automatically. Hyper allocates your HI budget across matched creators.
+            <div className="bg-gray-50 rounded-xl p-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-7 bg-gradient-to-r from-gray-800 to-gray-600 rounded flex items-center justify-center">
+                  <span className="text-white text-[8px] font-bold tracking-wider">VISA</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">&bull;&bull;&bull;&bull; 4242</p>
+                  <p className="text-xs text-gray-500">Expires 12/27</p>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed mb-3">
+              You&apos;re billed monthly based on the HI your creators generate, up to your spending limit. Limit resets on the 1st. Like ad spend — you only pay for real engagement.
             </p>
-            <button className="w-full mt-4 rounded-xl border-2 border-gray-200 py-3.5 font-semibold text-sm hover:bg-gray-50 transition-all min-h-[44px]">
-              Manage Subscription
+            <button className="w-full rounded-xl border-2 border-gray-200 py-3.5 font-semibold text-sm hover:bg-gray-50 transition-all min-h-[44px]">
+              Update Card
             </button>
           </div>
         ) : (
           <div>
-            <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-              Set up a monthly payment plan to fund your influence budget. Hyper handles all creator payments automatically.
+            <p className="text-sm text-gray-500 mb-2 leading-relaxed">
+              Add a card to activate your campaign. You&apos;re billed monthly based on real engagement, up to your spending limit. Resets on the 1st.
+            </p>
+            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+              Works like Instagram ads — add a card, set a monthly budget, Hyper handles billing. No commitments, cancel anytime.
             </p>
             <button className="w-full rounded-xl bg-black text-white py-3.5 font-semibold text-sm hover:bg-gray-900 active:scale-[0.98] transition-all shadow-lg shadow-black/10 min-h-[44px]">
-              Set Up Payment Plan
+              Add Payment Method
             </button>
           </div>
         )}

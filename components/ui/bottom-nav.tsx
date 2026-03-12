@@ -6,16 +6,16 @@ import { usePathname } from "next/navigation";
 const brandTabs = [
   { href: "/brand", label: "Home", icon: HomeIcon },
   { href: "/brand/briefing", label: "Briefing", icon: BriefingIcon },
-  { href: "/brand/creators", label: "Creators", icon: CreatorsIcon },
+  { href: "/brand/creators", label: "Posts", icon: PostsIcon },
   { href: "/brand/reports", label: "Reports", icon: ReportsIcon },
   { href: "/brand/profile", label: "Profile", icon: ProfileIcon },
 ];
 
 const influencerTabs = [
-  { href: "/influencer", label: "Home", icon: HomeIcon },
-  { href: "/influencer/assignments", label: "Collabs", icon: AssignmentIcon },
-  { href: "/influencer/earnings", label: "Earnings", icon: WalletIcon },
-  { href: "/influencer/profile", label: "Profile", icon: ProfileIcon },
+  { href: "/creator", label: "Home", icon: HomeIcon },
+  { href: "/creator/assignments", label: "Collabs", icon: AssignmentIcon },
+  { href: "/creator/earnings", label: "Earnings", icon: WalletIcon },
+  { href: "/creator/profile", label: "Profile", icon: ProfileIcon },
 ];
 
 export function BottomNav() {
@@ -29,7 +29,7 @@ export function BottomNav() {
         {tabs.map((tab) => {
           const isActive =
             pathname === tab.href ||
-            (tab.href !== (isBrand ? "/brand" : "/influencer") &&
+            (tab.href !== (isBrand ? "/brand" : "/creator") &&
               pathname.startsWith(tab.href));
           const Icon = tab.icon;
           return (
@@ -72,12 +72,13 @@ function BriefingIcon({ active }: { active: boolean }) {
   );
 }
 
-function CreatorsIcon({ active }: { active: boolean }) {
+function PostsIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   );
 }

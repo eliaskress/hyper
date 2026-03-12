@@ -47,19 +47,18 @@ export function HiEarnings({ hi, className = "" }: { hi: number | string; classN
   );
 }
 
-/** Budget display for restaurants */
+/** Budget progress bar for restaurants */
 export function HiBudget({
   budgetHi,
-  budgetType,
   hiDelivered,
 }: {
   budgetHi: number | string;
-  budgetType: string;
   hiDelivered: number | string;
 }) {
   const budget = typeof budgetHi === "string" ? parseFloat(budgetHi) : budgetHi;
   const delivered = typeof hiDelivered === "string" ? parseFloat(hiDelivered) : hiDelivered;
-  const totalUsd = budget * PRICE_PER_HI;
+  const spentUsd = delivered * PRICE_PER_HI;
+  const limitUsd = budget * PRICE_PER_HI;
   const percent = budget > 0 ? Math.min((delivered / budget) * 100, 100) : 0;
 
   return (
@@ -69,7 +68,7 @@ export function HiBudget({
           {delivered.toFixed(1)} / {budget.toFixed(0)} HI
         </span>
         <span className="text-xs text-gray-500">
-          ${totalUsd.toFixed(0)} {budgetType === "monthly" ? "/mo" : "total"}
+          ${spentUsd.toFixed(0)} / ${limitUsd.toFixed(0)}
         </span>
       </div>
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">

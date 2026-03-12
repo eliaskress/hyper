@@ -116,7 +116,7 @@ function Section({ title, count, children }: { title: string; count: number; chi
 
 function AssignmentCard({ assignment: a }: { assignment: Awaited<ReturnType<typeof getCreatorAssignments>>[number] }) {
   return (
-    <Link href={`/influencer/assignments/${a.id}`} className="block">
+    <Link href={`/creator/assignments/${a.id}`} className="block">
       <Card className="hover:shadow-md transition-shadow">
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 min-w-0">

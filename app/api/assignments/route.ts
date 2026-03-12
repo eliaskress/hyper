@@ -8,6 +8,7 @@ import { getAssignmentById, getPayoutByAssignmentId, updatePayoutStatus } from "
 const patchSchema = z.object({
   assignmentId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
   action: z.enum(["accept", "decline", "schedule", "pay"]),
+  selectedPlatforms: z.array(z.enum(["instagram", "tiktok", "youtube"])).min(1).optional(),
   declineReason: z.string().min(1).optional(),
   scheduledDate: z.string().optional(),
   scheduleTimeStart: z.string().optional(),
@@ -27,7 +28,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { assignmentId, action, declineReason, scheduledDate, scheduleTimeStart, scheduleTimeEnd } = parsed.data;
+    const { assignmentId, action, selectedPlatforms, declineReason, scheduledDate, scheduleTimeStart, scheduleTimeEnd } = parsed.data;
 
     const assignment = await getAssignmentById(assignmentId);
     if (!assignment) {
@@ -44,9 +45,15 @@ export async function PATCH(request: NextRequest) {
           { status: 409 },
         );
       }
+      if (!selectedPlatforms || selectedPlatforms.length === 0) {
+        return NextResponse.json(
+          { error: "Select at least one platform to post on", code: "NO_PLATFORMS" },
+          { status: 400 },
+        );
+      }
       const [updated] = await db
         .update(assignments)
-        .set({ status: "accepted" })
+        .set({ status: "accepted", selectedPlatforms })
         .where(eq(assignments.id, assignmentId))
         .returning();
       return NextResponse.json(updated);

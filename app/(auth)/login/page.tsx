@@ -9,7 +9,7 @@ export default function LoginPage() {
       </p>
       <div className="flex flex-col gap-3">
         <Link
-          href="/influencer"
+          href="/creator"
           className="group w-full rounded-2xl border-2 border-gray-100 bg-white p-6 text-left hover:border-black hover:shadow-lg transition-all duration-200 block"
         >
           <div className="flex items-center justify-between mb-2">

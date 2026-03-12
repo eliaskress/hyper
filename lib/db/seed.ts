@@ -165,7 +165,7 @@ async function seed() {
       budgetHi: "50.00",
       budgetTypeField: "monthly",
       status: "active",
-      hiDelivered: "18.40",
+      hiDelivered: "17.10",
     })
     .returning();
 
@@ -219,8 +219,9 @@ async function seed() {
       briefingId: briefing1.id,
       creatorId: creatorUser.id,
       status: "paid",
+      selectedPlatforms: ["instagram"],
       allocatedHi: "8.50",
-      scheduledDate: twoWeeksAgo,
+      scheduledDate: oneWeekAgo,
       scheduleTypeField: "flexible",
       scheduleTimeStart: "12:00",
       scheduleTimeEnd: "15:00",
@@ -236,6 +237,7 @@ async function seed() {
       briefingId: briefing2.id,
       creatorId: creatorUser.id,
       status: "measured",
+      selectedPlatforms: ["instagram", "tiktok"],
       allocatedHi: "6.00",
       scheduledDate: fiveDaysAgo,
       scheduleTypeField: "fixed",
@@ -253,6 +255,7 @@ async function seed() {
       briefingId: briefing1.id,
       creatorId: creatorUser.id,
       status: "scheduled",
+      selectedPlatforms: ["instagram", "tiktok"],
       allocatedHi: "8.00",
       scheduledDate: inThreeDays,
       scheduleTypeField: "flexible",
@@ -262,15 +265,20 @@ async function seed() {
     })
     .returning();
 
-  // Jake — accepted assignment for Bacio (needs to schedule)
+  // Jake — paid assignment for Bacio (completed)
   const [assignment4] = await db
     .insert(schema.assignments)
     .values({
       id: "00000000-0000-0000-0000-000000004004",
       briefingId: briefing1.id,
       creatorId: creator2.id,
-      status: "accepted",
+      status: "paid",
+      selectedPlatforms: ["instagram"],
       allocatedHi: "5.50",
+      scheduledDate: fiveDaysAgo,
+      scheduleTypeField: "fixed",
+      scheduleTimeStart: "13:00",
+      scheduleTimeEnd: "14:00",
       role: "originator",
     })
     .returning();
@@ -283,6 +291,7 @@ async function seed() {
       briefingId: briefing2.id,
       creatorId: creator2.id,
       status: "paid",
+      selectedPlatforms: ["instagram"],
       allocatedHi: "6.60",
       scheduledDate: oneWeekAgo,
       scheduleTypeField: "fixed",
@@ -310,6 +319,7 @@ async function seed() {
       briefingId: briefing1.id,
       creatorId: creator3.id,
       status: "posted",
+      selectedPlatforms: ["instagram"],
       allocatedHi: "9.00",
       scheduledDate: twoDaysAgo,
       scheduleTypeField: "flexible",
@@ -341,8 +351,8 @@ async function seed() {
     shares: 42,
     reach: 18200,
     hiCalculated: "9.90",
-    postedAt: twoWeeksAgo,
-    measuredAt: new Date(twoWeeksAgo.getTime() + 24 * 60 * 60 * 1000),
+    postedAt: oneWeekAgo,
+    measuredAt: new Date(oneWeekAgo.getTime() + 24 * 60 * 60 * 1000),
   });
 
   // Maria's post for Taqueria (measured, awaiting payout)
@@ -356,8 +366,8 @@ async function seed() {
     shares: 31,
     reach: 12400,
     hiCalculated: "8.50",
-    postedAt: fiveDaysAgo,
-    measuredAt: new Date(fiveDaysAgo.getTime() + 24 * 60 * 60 * 1000),
+    postedAt: oneWeekAgo,
+    measuredAt: new Date(oneWeekAgo.getTime() + 2 * 24 * 60 * 60 * 1000),
   });
 
   // Jake's post for Taqueria (measured + paid)
@@ -373,6 +383,21 @@ async function seed() {
     hiCalculated: "6.60",
     postedAt: oneWeekAgo,
     measuredAt: new Date(oneWeekAgo.getTime() + 24 * 60 * 60 * 1000),
+  });
+
+  // Jake's post for Bacio (measured + paid)
+  await db.insert(schema.posts).values({
+    assignmentId: assignment4.id,
+    platform: "instagram",
+    postUrl: "https://instagram.com/p/demo_jake_bacio_1",
+    likes: 1540,
+    comments: 112,
+    saves: 67,
+    shares: 29,
+    reach: 11500,
+    hiCalculated: "7.20",
+    postedAt: fiveDaysAgo,
+    measuredAt: new Date(fiveDaysAgo.getTime() + 24 * 60 * 60 * 1000),
   });
 
   // Sofia's post for Bacio (posted, not yet measured)
@@ -398,7 +423,17 @@ async function seed() {
     hiAmount: "9.90",
     status: "paid",
     stripeTransferId: "tr_demo_001",
-    paidAt: new Date(twoWeeksAgo.getTime() + 2 * 24 * 60 * 60 * 1000),
+    paidAt: new Date(oneWeekAgo.getTime() + 2 * 24 * 60 * 60 * 1000),
+  });
+
+  // Jake paid for Bacio assignment (7.20 HI × $4/HI creator share = $28.80)
+  await db.insert(schema.payouts).values({
+    assignmentId: assignment4.id,
+    amount: "28.80",
+    hiAmount: "7.20",
+    status: "paid",
+    stripeTransferId: "tr_demo_003",
+    paidAt: new Date(fiveDaysAgo.getTime() + 2 * 24 * 60 * 60 * 1000),
   });
 
   // Maria pending payout for Taqueria (8.50 HI × $4 = $34.00)
