@@ -1,8 +1,9 @@
-import { resend, FROM_EMAIL } from "./resend";
+import { getResend, FROM_EMAIL } from "./resend";
 import * as templates from "./templates";
 
 async function sendEmail(to: string, template: { subject: string; html: string }) {
-  if (!process.env.RESEND_API_KEY) {
+  const resend = getResend();
+  if (!resend) {
     console.log(`[email:skip] No RESEND_API_KEY, would send to ${to}: "${template.subject}"`);
     return null;
   }
