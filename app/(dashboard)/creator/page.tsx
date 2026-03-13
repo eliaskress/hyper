@@ -20,17 +20,17 @@ export default async function InfluencerHome() {
         <h1 className="text-3xl font-extrabold tracking-tight">Maria</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-10">
-        <StatCard label="Earned" value={`$${stats.totalEarned}`} color="green" />
-        <StatCard label="Total Collabs" value={stats.completedAssignments} />
-        <StatCard label="Upcoming" value={stats.upcomingAssignments} />
-        <div className="rounded-2xl p-5 bg-white border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-1.5 mb-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Total HI</p>
-            <HiTooltip />
-          </div>
-          <p className="text-2xl font-bold tracking-tight">{parseFloat(stats.totalHi).toFixed(1)}</p>
+      <div className="rounded-2xl bg-[#2563eb] text-white p-6 mb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Your Influence</p>
+          <HiTooltip />
         </div>
+        <p className="text-4xl font-extrabold tracking-tight">{parseFloat(stats.totalHi).toFixed(1)} <span className="text-lg font-semibold text-white/50">HI</span></p>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mb-10">
+        <StatCard label="Earned" value={`$${stats.totalEarned}`} color="green" />
+        <StatCard label="Collabs" value={stats.completedAssignments} />
+        <StatCard label="Upcoming" value={stats.upcomingAssignments} />
       </div>
 
       <div className="flex items-center justify-between mb-4">

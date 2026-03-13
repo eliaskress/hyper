@@ -110,6 +110,7 @@ export default async function BriefingPage() {
             availabilityDays: days,
             availabilityMeals: meals,
             budgetHi: briefing.budgetHi,
+            responseHours: briefing.responseHours,
           }}
         />
       </Card>

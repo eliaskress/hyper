@@ -3,8 +3,6 @@ export const dynamic = "force-dynamic";
 import { getCreatorStats, getCreatorEarnings } from "@/lib/db/queries";
 import { Card, StatCard } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { HiEarnings } from "@/components/ui/hi-display";
-import { PRICE_PER_HI, REVENUE_SPLIT } from "@/lib/hi";
 
 const DEMO_CREATOR_ID = "00000000-0000-0000-0000-000000000001";
 
@@ -19,15 +17,18 @@ export default async function InfluencerEarnings() {
         <p className="text-gray-400 text-sm">Your HI-based payout history.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <StatCard label="Total Earned" value={`$${stats.totalEarned}`} accent />
-        <StatCard label="Total HI" value={parseFloat(stats.totalHi).toFixed(1)} />
+      <div className="rounded-2xl bg-[#2563eb] text-white p-6 mb-3">
+        <p className="text-sm font-medium text-white/60 uppercase tracking-wider mb-1">Influence Generated</p>
+        <p className="text-4xl font-extrabold tracking-tight">{parseFloat(stats.totalHi).toFixed(1)} <span className="text-lg font-semibold text-white/50">HI</span></p>
+      </div>
+      <div className="mb-6">
+        <StatCard label="Total Earned" value={`$${stats.totalEarned}`} color="green" />
       </div>
 
       {/* Pricing info */}
       <div className="bg-gray-50 rounded-xl p-3 mb-6 text-center">
         <p className="text-xs text-gray-500">
-          ${PRICE_PER_HI}/HI &times; {REVENUE_SPLIT.creator}% creator share = <span className="font-semibold text-gray-700">${(PRICE_PER_HI * REVENUE_SPLIT.creator / 100).toFixed(0)}/HI</span> in your pocket
+          You earn <span className="font-semibold text-gray-700">$4/HI</span> for every unit of influence you generate.
         </p>
       </div>
 
@@ -62,7 +63,7 @@ export default async function InfluencerEarnings() {
               </div>
               {e.hiAmount && (
                 <p className="text-xs text-gray-500 mb-1">
-                  {parseFloat(e.hiAmount).toFixed(1)} HI &times; ${(PRICE_PER_HI * REVENUE_SPLIT.creator / 100).toFixed(0)}/HI
+                  {parseFloat(e.hiAmount).toFixed(1)} HI &times; $4/HI
                 </p>
               )}
               <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">

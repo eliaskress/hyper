@@ -6,20 +6,20 @@ import { usePathname } from "next/navigation";
 const brandTabs = [
   { href: "/brand", label: "Home", icon: HomeIcon },
   { href: "/brand/briefing", label: "Briefing", icon: BriefingIcon },
-  { href: "/brand/collabs", label: "Collabs", icon: PostsIcon },
+  { href: "/brand/campaigns", label: "Campaigns", icon: PostsIcon },
   { href: "/brand/reports", label: "Reports", icon: ReportsIcon },
   { href: "/brand/profile", label: "Profile", icon: ProfileIcon },
 ];
 
 const influencerTabs = [
   { href: "/creator", label: "Home", icon: HomeIcon },
-  { href: "/creator/assignments", label: "Collabs", icon: AssignmentIcon },
+  { href: "/creator/assignments", label: "Collabs", icon: AssignmentIcon, badgeKey: "collabs" as const },
+  { href: "/creator/influence", label: "Influence", icon: InfluenceIcon },
   { href: "/creator/earnings", label: "Earnings", icon: WalletIcon },
-  { href: "/creator/referrals", label: "Referrals", icon: ReferralIcon },
   { href: "/creator/profile", label: "Profile", icon: ProfileIcon },
 ];
 
-export function BottomNav() {
+export function BottomNav({ openCollabsCount = 0 }: { openCollabsCount?: number }) {
   const pathname = usePathname();
   const isBrand = pathname.startsWith("/brand");
   const tabs = isBrand ? brandTabs : influencerTabs;
@@ -41,7 +41,14 @@ export function BottomNav() {
                 isActive ? "text-black" : "text-gray-400 hover:text-gray-600"
               }`}
             >
-              <Icon active={isActive} />
+              <span className="relative">
+                <Icon active={isActive} />
+                {"badgeKey" in tab && tab.badgeKey === "collabs" && openCollabsCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                    {openCollabsCount}
+                  </span>
+                )}
+              </span>
               <span className={`text-[10px] mt-0.5 ${isActive ? "font-semibold" : "font-medium"}`}>
                 {tab.label}
               </span>
@@ -111,13 +118,12 @@ function WalletIcon({ active }: { active: boolean }) {
   );
 }
 
-function ReferralIcon({ active }: { active: boolean }) {
+function InfluenceIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 00-3-3.87" />
-      <path d="M16 3.13a4 4 0 010 7.75" />
+      <circle cx="12" cy="12" r="3" />
+      <circle cx="12" cy="12" r="7" opacity="0.6" />
+      <circle cx="12" cy="12" r="11" opacity="0.3" />
     </svg>
   );
 }

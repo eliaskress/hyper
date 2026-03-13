@@ -18,6 +18,7 @@ interface BriefingData {
   availabilityDays?: string[];
   availabilityMeals?: string[];
   budgetHi?: string;
+  responseHours?: number;
 }
 
 function hiFromUsd(usd: number) {
@@ -38,6 +39,8 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showHiTooltip, setShowHiTooltip] = useState(false);
+  const [showVibeInput, setShowVibeInput] = useState(false);
+  const [vibeWords, setVibeWords] = useState("");
   const router = useRouter();
 
   const usdNum = parseFloat(budgetUsd) || 0;
@@ -136,7 +139,47 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
 
       {/* Content Brief */}
       <div>
-        <label className="text-sm font-semibold text-gray-900 block mb-1.5">Content Brief</label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-sm font-semibold text-gray-900">Content Brief</label>
+          <button
+            type="button"
+            onClick={() => {
+              if (showVibeInput) {
+                setShowVibeInput(false);
+              } else {
+                setShowVibeInput(true);
+              }
+            }}
+            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            Generate Brief with AI
+          </button>
+        </div>
+        {showVibeInput && (
+          <div className="mb-2 space-y-2">
+            <input
+              type="text"
+              value={vibeWords}
+              onChange={(e) => setVibeWords(e.target.value)}
+              placeholder="Describe the vibe: cozy, golden hour, friends, outdoor..."
+              className="w-full text-sm rounded-xl border border-indigo-200 px-3 py-2.5 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (!vibeWords.trim()) return;
+                const words = vibeWords.split(",").map((w) => w.trim()).filter(Boolean);
+                const brief = `Post a Reel or Story capturing the ${words.join(", ")} vibe. Show the experience, not just the food. Tag us and keep it authentic.`;
+                setContentBrief(brief);
+                setShowVibeInput(false);
+                setVibeWords("");
+              }}
+              className="w-full rounded-xl bg-indigo-600 text-white py-2.5 text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all min-h-[44px]"
+            >
+              Generate
+            </button>
+          </div>
+        )}
         <textarea
           value={contentBrief}
           onChange={(e) => setContentBrief(e.target.value)}
@@ -199,6 +242,11 @@ export function BriefingForm({ existing }: { existing?: BriefingData }) {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Response Window Note */}
+      <div className="bg-gray-50 rounded-xl px-4 py-3">
+        <p className="text-xs text-gray-500">Matched creators have <span className="font-semibold text-gray-700">72 hours</span> to respond before the match expires.</p>
       </div>
 
       {error && <p className="text-xs text-red-600">{error}</p>}

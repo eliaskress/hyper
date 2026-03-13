@@ -4,38 +4,71 @@ import { getCreatorAssignments } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { HiEarnings } from "@/components/ui/hi-display";
-import { WhatsAppPreview } from "@/components/ui/whatsapp-preview";
 import Link from "next/link";
+import { CollabsTabs } from "./collabs-tabs";
 
 const DEMO_CREATOR_ID = "00000000-0000-0000-0000-000000000001";
 
 export default async function AssignmentsPage() {
   const assignments = await getCreatorAssignments(DEMO_CREATOR_ID);
 
-  // Group by status
-  const upcoming = assignments.filter((a) => ["invited", "accepted", "scheduled"].includes(a.status));
+  // Open Collabs = matched but not yet responded
+  const matched = assignments.filter((a) => a.status === "invited");
+
+  // My Collabs = accepted and beyond
+  const accepted = assignments.filter((a) => ["accepted", "scheduled"].includes(a.status));
   const active = assignments.filter((a) => ["posted", "measured"].includes(a.status));
   const completed = assignments.filter((a) => a.status === "paid");
   const declined = assignments.filter((a) => a.status === "declined");
+  const myCount = accepted.length + active.length + completed.length + declined.length;
 
-  return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-1">Collabs</h1>
-        <p className="text-gray-400 text-sm">Restaurant visits matched by Hyper.</p>
-      </div>
+  const openTab = (
+    <>
+      {matched.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {matched.map((a) => (
+            <Link key={a.id} href={`/creator/assignments/${a.id}`} className="block">
+              <Card className="hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{a.businessName}</p>
+                    {a.address && <p className="text-xs text-gray-400 mt-0.5">{a.address}</p>}
+                  </div>
+                  <span className="text-xs font-medium text-blue-700 bg-blue-50 rounded-full px-2 py-0.5">Matched</span>
+                </div>
+                <p className="text-sm text-gray-600 line-clamp-2 mb-2">{a.contentBrief}</p>
+                {a.offerDescription && (
+                  <p className="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5 mb-2">
+                    Includes: {a.offerDescription}
+                  </p>
+                )}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                  {a.responseDueAt ? (
+                    <DueCountdown dueAt={a.responseDueAt} />
+                  ) : (
+                    <span className="text-xs text-blue-600 font-medium">Tap to view details</span>
+                  )}
+                  <span className="text-gray-400 text-sm">&rarr;</span>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <Card className="text-center py-10">
+          <p className="font-medium text-gray-900 mb-1">No new matches right now</p>
+          <p className="text-sm text-gray-400">Hyper will match you with restaurants based on your HIG score and location.</p>
+        </Card>
+      )}
+    </>
+  );
 
-      {/* Lifecycle explanation */}
-      <div className="bg-gray-50 rounded-xl p-3 mb-6">
-        <p className="text-xs text-gray-500 text-center">
-          Invited &rarr; Locked in &rarr; Scheduled &rarr; Posted &rarr; Measured &rarr; Paid
-        </p>
-      </div>
-
-      {/* Upcoming */}
-      {upcoming.length > 0 && (
-        <Section title="Upcoming" count={upcoming.length}>
-          {upcoming.map((a) => (
+  const myTab = (
+    <>
+      {/* Accepted / Scheduled */}
+      {accepted.length > 0 && (
+        <Section title="Upcoming" count={accepted.length}>
+          {accepted.map((a) => (
             <AssignmentCard key={a.id} assignment={a} />
           ))}
         </Section>
@@ -68,36 +101,30 @@ export default async function AssignmentsPage() {
         </Section>
       )}
 
-      {assignments.length === 0 && (
+      {myCount === 0 && (
         <Card className="text-center py-10">
           <p className="font-medium text-gray-900 mb-1">No collabs yet</p>
           <p className="text-sm text-gray-400">
-            Hyper will match you with restaurants based on your HIG score and location.
+            Accept a match from New Matches to get started.
           </p>
         </Card>
       )}
+    </>
+  );
 
-      {/* WhatsApp Preview */}
-      <div className="mt-6">
-        <Card>
-          <h3 className="text-sm font-semibold mb-3">How invitations arrive</h3>
-          <WhatsAppPreview
-            messages={[
-              {
-                from: "hyper",
-                text: "Hi Maria! You've been matched with Bacio di Latte.\n\nBrief: Post a Reel featuring our gelato...\n\nReply YES to accept.",
-                time: "10:30 AM",
-              },
-              { from: "user", text: "YES", time: "10:32 AM" },
-              {
-                from: "hyper",
-                text: "You're in! Pick a visit time:\n\nAvailable: Mon-Sun, Lunch & Dinner\nSchedule type: Flexible (pick a time range)",
-                time: "10:32 AM",
-              },
-            ]}
-          />
-        </Card>
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight mb-1">Collabs</h1>
+        <p className="text-gray-400 text-sm">Restaurant visits matched by Hyper.</p>
       </div>
+
+      <CollabsTabs
+        openTab={openTab}
+        myTab={myTab}
+        openCount={matched.length}
+        myCount={myCount}
+      />
     </div>
   );
 }
@@ -111,6 +138,40 @@ function Section({ title, count, children }: { title: string; count: number; chi
       </div>
       <div className="flex flex-col gap-3">{children}</div>
     </div>
+  );
+}
+
+function DueCountdown({ dueAt }: { dueAt: Date }) {
+  const now = new Date();
+  const diff = dueAt.getTime() - now.getTime();
+
+  if (diff <= 0) {
+    return <span className="text-xs text-red-600 font-medium">Expired</span>;
+  }
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours < 6) {
+    return (
+      <span className="text-xs text-red-600 font-medium">
+        {hours}h {minutes}m left to respond
+      </span>
+    );
+  }
+  if (hours < 24) {
+    return (
+      <span className="text-xs text-amber-600 font-medium">
+        {hours}h left to respond
+      </span>
+    );
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return (
+    <span className="text-xs text-blue-600 font-medium">
+      {days}d {remainingHours}h left to respond
+    </span>
   );
 }
 

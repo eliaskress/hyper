@@ -27,7 +27,7 @@ export function StatCard({
   const bg = color === "green"
     ? "bg-green-600 text-white"
     : accent
-      ? "bg-black text-white"
+      ? "bg-[#2563eb] text-white"
       : "bg-white border border-gray-100 shadow-sm";
 
   return (

@@ -10,7 +10,12 @@ import {
   createPayout,
   getCreatorHIGData,
   updateCreatorHIG,
+  createNotification,
+  getCreatorAmplificationEffectiveness,
+  getAssignmentEmailContext,
 } from "@/lib/db/queries";
+import { sendHiMeasuredEmail } from "@/lib/email";
+import { PRICE_PER_HI } from "@/lib/hi";
 
 const schema = z.object({
   assignmentId: z.string().uuid(),
@@ -81,10 +86,37 @@ export async function POST(request: NextRequest) {
       hiAmount: hiRounded.toString(),
     });
 
-    // Recalculate creator's HIG score
+    // Recalculate creator's HIG score with real amplification + network data
     const higData = await getCreatorHIGData(assignment.creatorId);
-    const newHIG = calculateHIG(higData);
+    const ampEffectiveness = await getCreatorAmplificationEffectiveness(assignment.creatorId);
+    const newHIG = calculateHIG({
+      ...higData,
+      amplificationEffectiveness: ampEffectiveness,
+    });
     await updateCreatorHIG(assignment.creatorId, newHIG);
+
+    // Notify creator about measurement
+    await createNotification({
+      userId: assignment.creatorId,
+      type: "campaign_update",
+      title: "Your post has been measured",
+      body: `Your post scored ${hiRounded} HI. Payout of $${payout.creatorUsd.toFixed(2)} is on the way.`,
+      metadata: { assignmentId, hi: hiRounded, payout: payout.creatorUsd },
+    });
+
+    // Email restaurant with HI results (respects preferences)
+    const ctx = await getAssignmentEmailContext(assignmentId);
+    if (ctx?.brandEmail && ctx.brandEmailPreferences?.hiMeasured !== false) {
+      const engagements = likes + comments + saves + shares;
+      sendHiMeasuredEmail(ctx.brandEmail, {
+        brandName: ctx.brandName,
+        creatorHandle: ctx.creatorHandle,
+        hiScore: hiRounded,
+        reach,
+        engagements,
+        costUsd: hiRounded * PRICE_PER_HI,
+      });
+    }
 
     return NextResponse.json({
       hi: hiRounded,

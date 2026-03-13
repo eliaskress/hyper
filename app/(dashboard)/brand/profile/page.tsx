@@ -1,8 +1,9 @@
-import { getBrandByUserId } from "@/lib/db/queries";
+import { getBrandByUserId, getBrandBriefing, getBriefingNeighborhoodCoverage } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { WhatsAppIndicator } from "@/components/ui/whatsapp-preview";
 import { BrandProfileEdit } from "./profile-edit";
 import { BrandInfoEdit } from "./brand-info-edit";
+import { EmailPreferences } from "@/components/ui/email-preferences";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,44 @@ export default async function BrandProfile() {
           </button>
         )}
       </Card>
+
+      {/* Creator Coverage */}
+      {await (async () => {
+        const briefing = await getBrandBriefing(brand.id);
+        if (!briefing) return null;
+        const neighborhoods = await getBriefingNeighborhoodCoverage(briefing.id);
+        if (neighborhoods.length === 0) return null;
+        return (
+          <Card className="mb-4">
+            <h2 className="font-bold mb-3">Creator Coverage</h2>
+            <div className="space-y-2">
+              {neighborhoods.map((n) => (
+                <div key={n.neighborhood} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{n.neighborhood}</p>
+                    <p className="text-xs text-gray-500">{n.creatorCount} creator{n.creatorCount !== 1 ? "s" : ""}</p>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {n.totalReach > 0
+                      ? `${n.totalReach >= 1000 ? `${(n.totalReach / 1000).toFixed(1)}k` : n.totalReach} reach`
+                      : "No posts yet"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
+
+      {/* Email Preferences */}
+      <div className="mb-4">
+        <EmailPreferences
+          userId={DEMO_USER_ID}
+          role="brand"
+          email={brand.email}
+          preferences={brand.emailPreferences}
+        />
+      </div>
 
       {/* Payment Method */}
       <Card>

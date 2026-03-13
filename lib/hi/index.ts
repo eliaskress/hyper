@@ -78,10 +78,31 @@ export function calculatePayout(hi: number) {
   };
 }
 
+/**
+ * Calculate amplification HI reward (30% of original post HI).
+ */
+export function calculateAmplificationHI(originalHI: number): number {
+  return originalHI * (AMPLIFICATION.rewardPercent / 100);
+}
+
+/**
+ * Calculate network payout from HI (network split = 20% of gross).
+ */
+export function calculateNetworkPayout(hi: number) {
+  const grossUsd = hi * PRICE_PER_HI;
+  return {
+    networkUsd: grossUsd * (REVENUE_SPLIT.network / 100),
+    recruiterUsd: grossUsd * (NETWORK_SPLIT.creatorRecruiter / 100),
+    introducerUsd: grossUsd * (NETWORK_SPLIT.restaurantIntroducer / 100),
+  };
+}
+
 export interface HIGData {
   avgHi: number;
   paidAssignments: number;
   totalNonDeclinedAssignments: number;
+  amplificationEffectiveness?: number;
+  networkContribution?: number;
 }
 
 export function calculateHIG(data: HIGData): number {
@@ -94,11 +115,11 @@ export function calculateHIG(data: HIGData): number {
       ? (data.paidAssignments / data.totalNonDeclinedAssignments) * 100
       : 0;
 
-  // Amplification (20%): stub at 50
-  const amplification = 50;
+  // Amplification effectiveness (20%): 0-100, defaults to 50 if no data
+  const amplification = data.amplificationEffectiveness ?? 50;
 
-  // Network (10%): stub at 50
-  const network = 50;
+  // Network contribution (10%): 0-100, defaults to 50 if no data
+  const network = data.networkContribution ?? 50;
 
   const score =
     (hiScore * HIG_WEIGHTS.hiPerformance +

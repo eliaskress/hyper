@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { users, brands, briefings, assignments, posts, payouts, badges } from "@/lib/db/schema";
-import { eq, desc, count, sum, avg, sql, and } from "drizzle-orm";
+import { users, brands, briefings, assignments, posts, payouts, badges, propagationEvents, referrals, notifications } from "@/lib/db/schema";
+import { eq, desc, count, sum, avg, sql, and, ne } from "drizzle-orm";
+import { PRICE_PER_HI, NETWORK_SPLIT } from "@/lib/hi";
 
 // ── Creator Queries ─────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ export async function getCreatorAssignments(userId: string) {
       scheduleTimeStart: assignments.scheduleTimeStart,
       scheduleTimeEnd: assignments.scheduleTimeEnd,
       role: assignments.role,
+      responseDueAt: assignments.responseDueAt,
       createdAt: assignments.createdAt,
       contentBrief: briefings.contentBrief,
       offerDescription: briefings.offerDescription,
@@ -112,6 +114,7 @@ export async function getCreatorProfile(userId: string) {
       id: users.id,
       handle: users.handle,
       instagramId: users.instagramId,
+      email: users.email,
       avatar: users.avatar,
       followersCount: users.followersCount,
       location: users.location,
@@ -121,6 +124,9 @@ export async function getCreatorProfile(userId: string) {
       higScore: users.higScore,
       primaryPlatform: users.primaryPlatform,
       platforms: users.platforms,
+      neighborhood: users.neighborhood,
+      referralCode: users.referralCode,
+      emailPreferences: users.emailPreferences,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -135,7 +141,14 @@ export async function getBrandByUserId(userId: string) {
     .select()
     .from(brands)
     .where(eq(brands.userId, userId));
-  return brand ?? null;
+  if (!brand) return null;
+
+  const [user] = await db
+    .select({ email: users.email, emailPreferences: users.emailPreferences })
+    .from(users)
+    .where(eq(users.id, userId));
+
+  return { ...brand, email: user?.email ?? null, emailPreferences: user?.emailPreferences ?? null };
 }
 
 export async function getBrandBriefing(brandId: string) {
@@ -293,6 +306,48 @@ export async function getAssignmentById(assignmentId: string) {
   return assignment ?? null;
 }
 
+export async function getAssignmentEmailContext(assignmentId: string) {
+  const [row] = await db
+    .select({
+      creatorHandle: users.handle,
+      creatorEmail: users.email,
+      creatorEmailPreferences: users.emailPreferences,
+      creatorFollowers: users.followersCount,
+      brandName: brands.businessName,
+      brandAddress: brands.address,
+      brandUserId: brands.userId,
+      contentBrief: briefings.contentBrief,
+      offerDescription: briefings.offerDescription,
+      responseHours: briefings.responseHours,
+    })
+    .from(assignments)
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .innerJoin(briefings, eq(assignments.briefingId, briefings.id))
+    .innerJoin(brands, eq(briefings.brandId, brands.id))
+    .where(eq(assignments.id, assignmentId));
+  if (!row) return null;
+
+  // Get brand user email + preferences
+  const [brandUser] = await db
+    .select({ email: users.email, emailPreferences: users.emailPreferences })
+    .from(users)
+    .where(eq(users.id, row.brandUserId));
+
+  return {
+    creatorHandle: row.creatorHandle,
+    creatorEmail: row.creatorEmail,
+    creatorFollowers: row.creatorFollowers ?? 0,
+    creatorEmailPreferences: row.creatorEmailPreferences,
+    brandName: row.brandName,
+    brandAddress: row.brandAddress ?? "",
+    brandEmail: brandUser?.email ?? null,
+    brandEmailPreferences: brandUser?.emailPreferences ?? null,
+    contentBrief: row.contentBrief,
+    offerDescription: row.offerDescription,
+    responseHours: row.responseHours,
+  };
+}
+
 export async function getAssignmentDetail(assignmentId: string) {
   const rows = await db
     .select({
@@ -306,6 +361,7 @@ export async function getAssignmentDetail(assignmentId: string) {
       scheduleTimeEnd: assignments.scheduleTimeEnd,
       role: assignments.role,
       declineReason: assignments.declineReason,
+      responseDueAt: assignments.responseDueAt,
       createdAt: assignments.createdAt,
       contentBrief: briefings.contentBrief,
       offerDescription: briefings.offerDescription,
@@ -362,6 +418,7 @@ export async function getAssignmentDetail(assignmentId: string) {
     scheduleTimeEnd: first.scheduleTimeEnd,
     role: first.role,
     declineReason: first.declineReason,
+    responseDueAt: first.responseDueAt,
     createdAt: first.createdAt,
     contentBrief: first.contentBrief,
     offerDescription: first.offerDescription,
@@ -395,6 +452,7 @@ export async function createBriefing(data: {
   availabilityDays: string[];
   availabilityMeals: string[];
   budgetHi: string;
+  responseHours?: number;
 }) {
   const [created] = await db
     .insert(briefings)
@@ -405,6 +463,7 @@ export async function createBriefing(data: {
       availabilityDays: data.availabilityDays,
       availabilityMeals: data.availabilityMeals,
       budgetHi: data.budgetHi,
+      responseHours: data.responseHours ?? 72,
       status: "active",
     })
     .returning();
@@ -420,6 +479,7 @@ export async function updateBriefing(
     availabilityMeals: string[];
     budgetHi: string;
     budgetType: "per_engagement" | "monthly";
+    responseHours: number;
     status: "active" | "paused" | "completed";
   }>,
 ) {
@@ -430,6 +490,7 @@ export async function updateBriefing(
   if (data.availabilityMeals !== undefined) set.availabilityMeals = data.availabilityMeals;
   if (data.budgetHi !== undefined) set.budgetHi = data.budgetHi;
   if (data.budgetType !== undefined) set.budgetTypeField = data.budgetType;
+  if (data.responseHours !== undefined) set.responseHours = data.responseHours;
   if (data.status !== undefined) set.status = data.status;
 
   const [updated] = await db
@@ -641,4 +702,638 @@ export async function updateCreatorHIG(userId: string, higScore: number) {
     .where(eq(users.id, userId))
     .returning();
   return updated ?? null;
+}
+
+// ── Influence Graph Queries ──────────────────────────────────────
+
+export async function getInfluencePropagation(creatorId: string) {
+  return db
+    .select()
+    .from(propagationEvents)
+    .where(
+      sql`${propagationEvents.sourceCreatorId} = ${creatorId} OR ${propagationEvents.targetCreatorId} = ${creatorId}`,
+    )
+    .orderBy(desc(propagationEvents.createdAt));
+}
+
+export async function getAmplifiersForCreator(creatorId: string) {
+  const rows = await db
+    .select({
+      handle: users.handle,
+      avatar: users.avatar,
+      totalHi: sum(propagationEvents.hiAmount),
+    })
+    .from(propagationEvents)
+    .innerJoin(users, eq(propagationEvents.sourceCreatorId, users.id))
+    .where(
+      and(
+        eq(propagationEvents.targetCreatorId, creatorId),
+        eq(propagationEvents.type, 'amplification'),
+      ),
+    )
+    .groupBy(users.id, users.handle, users.avatar);
+
+  return rows.map((r) => ({
+    handle: r.handle,
+    avatar: r.avatar ?? r.handle.charAt(0).toUpperCase(),
+    hi: parseFloat(r.totalHi ?? "0"),
+  }));
+}
+
+export async function getCreatorReach(creatorId: string) {
+  const [result] = await db
+    .select({ total: sum(posts.reach) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(and(eq(assignments.creatorId, creatorId), sql`${posts.reach} IS NOT NULL`));
+
+  return parseInt(result?.total ?? "0");
+}
+
+export async function getCreatorAvgHi(creatorId: string) {
+  const [result] = await db
+    .select({ avgHi: avg(posts.hiCalculated) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(and(eq(assignments.creatorId, creatorId), sql`${posts.hiCalculated} IS NOT NULL`));
+
+  return parseFloat(result?.avgHi ?? "0");
+}
+
+export async function getReferralsByReferrer(userId: string) {
+  return db
+    .select({
+      id: referrals.id,
+      referredId: referrals.referredId,
+      referralCode: referrals.referralCode,
+      createdAt: referrals.createdAt,
+      expiresAt: referrals.expiresAt,
+      referredHandle: users.handle,
+    })
+    .from(referrals)
+    .innerJoin(users, eq(referrals.referredId, users.id))
+    .where(eq(referrals.referrerId, userId))
+    .orderBy(desc(referrals.createdAt));
+}
+
+export async function getNetworkHi(userId: string) {
+  const [result] = await db
+    .select({ total: sum(propagationEvents.hiAmount) })
+    .from(propagationEvents)
+    .where(
+      and(
+        eq(propagationEvents.targetCreatorId, userId),
+        eq(propagationEvents.type, 'referral_hi'),
+      ),
+    );
+
+  return parseFloat(result?.total ?? "0");
+}
+
+export async function getNetworkEarnings(userId: string) {
+  const networkHi = await getNetworkHi(userId);
+  const grossUsd = networkHi * PRICE_PER_HI;
+  const networkUsd = grossUsd * (NETWORK_SPLIT.creatorRecruiter / 100);
+  return networkUsd;
+}
+
+export async function createPropagationEvent(data: {
+  type: 'amplification' | 'referral_hi' | 'network_boost';
+  sourcePostId?: string;
+  sourceCreatorId: string;
+  targetCreatorId: string;
+  briefingId?: string;
+  hiAmount: string;
+}) {
+  const [created] = await db
+    .insert(propagationEvents)
+    .values({
+      type: data.type,
+      sourcePostId: data.sourcePostId ?? null,
+      sourceCreatorId: data.sourceCreatorId,
+      targetCreatorId: data.targetCreatorId,
+      briefingId: data.briefingId ?? null,
+      hiAmount: data.hiAmount,
+    })
+    .returning();
+  return created;
+}
+
+export async function createReferral(data: {
+  referrerId: string;
+  referredId: string;
+  referralCode: string;
+}) {
+  const expiresAt = new Date();
+  expiresAt.setMonth(expiresAt.getMonth() + 24);
+
+  const [created] = await db
+    .insert(referrals)
+    .values({
+      referrerId: data.referrerId,
+      referredId: data.referredId,
+      referralCode: data.referralCode,
+      expiresAt,
+    })
+    .returning();
+  return created;
+}
+
+// ── Open Campaign Queries ────────────────────────────────────────
+
+export async function getOpenBriefings() {
+  const rows = await db
+    .select({
+      id: briefings.id,
+      brandId: briefings.brandId,
+      contentBrief: briefings.contentBrief,
+      offerDescription: briefings.offerDescription,
+      budgetHi: briefings.budgetHi,
+      hiDelivered: briefings.hiDelivered,
+      createdAt: briefings.createdAt,
+      businessName: brands.businessName,
+      address: brands.address,
+      verified: brands.verified,
+    })
+    .from(briefings)
+    .innerJoin(brands, eq(briefings.brandId, brands.id))
+    .where(
+      and(
+        eq(briefings.visibility, 'open'),
+        eq(briefings.status, 'active'),
+      ),
+    )
+    .orderBy(desc(briefings.createdAt));
+
+  return rows;
+}
+
+export async function getCreatorOpenAssignment(creatorId: string, briefingId: string) {
+  const [existing] = await db
+    .select()
+    .from(assignments)
+    .where(
+      and(
+        eq(assignments.creatorId, creatorId),
+        eq(assignments.briefingId, briefingId),
+      ),
+    );
+  return existing ?? null;
+}
+
+export async function createSelfAssignment(data: {
+  briefingId: string;
+  creatorId: string;
+}) {
+  const [created] = await db
+    .insert(assignments)
+    .values({
+      briefingId: data.briefingId,
+      creatorId: data.creatorId,
+      status: 'accepted',
+      role: 'originator',
+    })
+    .returning();
+  return created;
+}
+
+// ── Amplification Queries ────────────────────────────────────────
+
+export async function getAmplificationOpportunities(creatorId: string) {
+  // Posts by other creators for active briefings, measured, not already at 5 amplifiers
+  const measuredPosts = await db
+    .select({
+      postId: posts.id,
+      postUrl: posts.postUrl,
+      hiCalculated: posts.hiCalculated,
+      creatorHandle: users.handle,
+      creatorAvatar: users.avatar,
+      businessName: brands.businessName,
+      briefingId: briefings.id,
+      assignmentId: assignments.id,
+      creatorId: assignments.creatorId,
+    })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .innerJoin(briefings, eq(assignments.briefingId, briefings.id))
+    .innerJoin(brands, eq(briefings.brandId, brands.id))
+    .where(
+      and(
+        ne(assignments.creatorId, creatorId),
+        eq(briefings.status, 'active'),
+        sql`${posts.hiCalculated} IS NOT NULL`,
+      ),
+    )
+    .orderBy(desc(posts.measuredAt));
+
+  // Filter out posts already at max amplifiers
+  const results = [];
+  for (const post of measuredPosts) {
+    const ampCount = await getAmplificationsByPost(post.postId);
+    // Check if this creator already amplified this post
+    const [alreadyAmped] = await db
+      .select()
+      .from(propagationEvents)
+      .where(
+        and(
+          eq(propagationEvents.sourceCreatorId, creatorId),
+          eq(propagationEvents.sourcePostId, post.postId),
+          eq(propagationEvents.type, 'amplification'),
+        ),
+      );
+    if (ampCount < 5 && !alreadyAmped) {
+      results.push({
+        ...post,
+        amplifierCount: ampCount,
+        potentialHi: parseFloat(post.hiCalculated ?? "0") * 0.30,
+      });
+    }
+  }
+  return results;
+}
+
+export async function getAmplificationsByPost(postId: string) {
+  const [result] = await db
+    .select({ count: count() })
+    .from(propagationEvents)
+    .where(
+      and(
+        eq(propagationEvents.sourcePostId, postId),
+        eq(propagationEvents.type, 'amplification'),
+      ),
+    );
+  return result?.count ?? 0;
+}
+
+export async function getCreatorAmplificationTotal(creatorId: string, briefingId: string) {
+  const [result] = await db
+    .select({ total: sum(propagationEvents.hiAmount) })
+    .from(propagationEvents)
+    .where(
+      and(
+        eq(propagationEvents.sourceCreatorId, creatorId),
+        eq(propagationEvents.briefingId, briefingId),
+        eq(propagationEvents.type, 'amplification'),
+      ),
+    );
+  return parseFloat(result?.total ?? "0");
+}
+
+export async function getCreatorAmplificationEffectiveness(creatorId: string) {
+  // Ratio of amplification HI given vs available opportunities
+  const [given] = await db
+    .select({ total: sum(propagationEvents.hiAmount) })
+    .from(propagationEvents)
+    .where(
+      and(
+        eq(propagationEvents.sourceCreatorId, creatorId),
+        eq(propagationEvents.type, 'amplification'),
+      ),
+    );
+
+  const totalGiven = parseFloat(given?.total ?? "0");
+  // Normalize: 10 HI of amplification given = 100 score
+  return Math.min(100, (totalGiven / 10) * 100);
+}
+
+// ── Neighborhood Queries ─────────────────────────────────────────
+
+export async function getNeighborhoodHi(neighborhood: string, windowDays = 7) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - windowDays);
+
+  const [result] = await db
+    .select({ total: sum(posts.hiCalculated) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .where(
+      and(
+        eq(users.neighborhood, neighborhood),
+        sql`${posts.measuredAt} >= ${cutoff}`,
+        sql`${posts.hiCalculated} IS NOT NULL`,
+      ),
+    );
+
+  return parseFloat(result?.total ?? "0");
+}
+
+export async function getNeighborhoodCreatorCount(neighborhood: string) {
+  const [result] = await db
+    .select({ count: count() })
+    .from(users)
+    .where(
+      and(
+        eq(users.neighborhood, neighborhood),
+        eq(users.role, 'influencer'),
+      ),
+    );
+  return result?.count ?? 0;
+}
+
+export async function getCreatorCityRank(creatorId: string) {
+  // Rank creators by total HI (all measured posts)
+  const allCreators = await db
+    .select({
+      creatorId: assignments.creatorId,
+      totalHi: sum(posts.hiCalculated),
+    })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .where(
+      and(
+        eq(users.role, 'influencer'),
+        sql`${posts.hiCalculated} IS NOT NULL`,
+      ),
+    )
+    .groupBy(assignments.creatorId)
+    .orderBy(sql`sum(${posts.hiCalculated}) DESC`);
+
+  const rank = allCreators.findIndex((c) => c.creatorId === creatorId);
+  return rank === -1 ? allCreators.length + 1 : rank + 1;
+}
+
+// ── Notification Queries ─────────────────────────────────────────
+
+export async function getNotifications(userId: string, unreadOnly = false) {
+  const conditions = [eq(notifications.userId, userId)];
+  if (unreadOnly) {
+    conditions.push(eq(notifications.read, false));
+  }
+
+  return db
+    .select()
+    .from(notifications)
+    .where(and(...conditions))
+    .orderBy(desc(notifications.createdAt));
+}
+
+export async function getUnreadNotificationCount(userId: string) {
+  const [result] = await db
+    .select({ count: count() })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.userId, userId),
+        eq(notifications.read, false),
+      ),
+    );
+  return result?.count ?? 0;
+}
+
+export async function createNotification(data: {
+  userId: string;
+  type: 'new_opportunity' | 'amplification_received' | 'milestone' | 'payout_ready' | 'campaign_update' | 'rank_change';
+  title: string;
+  body: string;
+  metadata?: unknown;
+}) {
+  const [created] = await db
+    .insert(notifications)
+    .values({
+      userId: data.userId,
+      type: data.type,
+      title: data.title,
+      body: data.body,
+      metadata: data.metadata ?? null,
+    })
+    .returning();
+  return created;
+}
+
+export async function markNotificationRead(notificationId: string) {
+  const [updated] = await db
+    .update(notifications)
+    .set({ read: true })
+    .where(eq(notifications.id, notificationId))
+    .returning();
+  return updated ?? null;
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  await db
+    .update(notifications)
+    .set({ read: true })
+    .where(
+      and(
+        eq(notifications.userId, userId),
+        eq(notifications.read, false),
+      ),
+    );
+}
+
+// ── Briefing by ID (for open campaign validation) ────────────────
+
+export async function getBriefingById(briefingId: string) {
+  const [b] = await db.select().from(briefings).where(eq(briefings.id, briefingId));
+  return b ?? null;
+}
+
+// ── Brand-Facing Influence Queries ──────────────────────────────
+
+export async function getBriefingInfluenceSpread(briefingId: string) {
+  // Creators who posted
+  const postedAssignments = await db
+    .select({ creatorId: assignments.creatorId })
+    .from(assignments)
+    .innerJoin(posts, eq(posts.assignmentId, assignments.id))
+    .where(eq(assignments.briefingId, briefingId))
+    .groupBy(assignments.creatorId);
+
+  const creatorsPosted = postedAssignments.length;
+
+  // Amplifications for this briefing
+  const [ampStats] = await db
+    .select({
+      ampCount: count(),
+      secondaryCreators: count(sql`DISTINCT ${propagationEvents.sourceCreatorId}`),
+    })
+    .from(propagationEvents)
+    .where(
+      and(
+        eq(propagationEvents.briefingId, briefingId),
+        eq(propagationEvents.type, 'amplification'),
+      ),
+    );
+
+  // Total reach from all posts in briefing
+  const [reachStats] = await db
+    .select({ totalReach: sum(posts.reach) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(
+      and(
+        eq(assignments.briefingId, briefingId),
+        sql`${posts.reach} IS NOT NULL`,
+      ),
+    );
+
+  return {
+    creatorsPosted,
+    amplificationCount: ampStats?.ampCount ?? 0,
+    secondaryCreators: ampStats?.secondaryCreators ?? 0,
+    totalCreatorReach: parseInt(reachStats?.totalReach ?? "0"),
+  };
+}
+
+export async function getBriefingCreatorRanking(briefingId: string) {
+  const rows = await db
+    .select({
+      creatorId: assignments.creatorId,
+      handle: users.handle,
+      avatar: users.avatar,
+      followersCount: users.followersCount,
+      neighborhood: users.neighborhood,
+      higScore: users.higScore,
+      primaryPlatform: users.primaryPlatform,
+      totalHi: sum(posts.hiCalculated),
+      postCount: count(posts.id),
+      totalReach: sum(posts.reach),
+    })
+    .from(assignments)
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .innerJoin(posts, eq(posts.assignmentId, assignments.id))
+    .where(
+      and(
+        eq(assignments.briefingId, briefingId),
+        sql`${posts.hiCalculated} IS NOT NULL`,
+      ),
+    )
+    .groupBy(assignments.creatorId, users.id, users.handle, users.avatar, users.followersCount, users.neighborhood, users.higScore, users.primaryPlatform)
+    .orderBy(sql`sum(${posts.hiCalculated}) DESC`);
+
+  // Get amplifications received per creator for this briefing
+  const results = [];
+  for (const row of rows) {
+    const [ampReceived] = await db
+      .select({ count: count() })
+      .from(propagationEvents)
+      .where(
+        and(
+          eq(propagationEvents.targetCreatorId, row.creatorId),
+          eq(propagationEvents.briefingId, briefingId),
+          eq(propagationEvents.type, 'amplification'),
+        ),
+      );
+
+    results.push({
+      handle: row.handle,
+      avatar: row.avatar,
+      followersCount: row.followersCount,
+      neighborhood: row.neighborhood,
+      higScore: row.higScore,
+      primaryPlatform: row.primaryPlatform ?? "instagram",
+      totalHi: parseFloat(row.totalHi ?? "0"),
+      postCount: row.postCount,
+      totalReach: parseInt(row.totalReach ?? "0"),
+      amplificationsReceived: ampReceived?.count ?? 0,
+    });
+  }
+
+  return results;
+}
+
+export async function getBriefingNeighborhoodCoverage(briefingId: string) {
+  const rows = await db
+    .select({
+      neighborhood: users.neighborhood,
+      creatorCount: count(sql`DISTINCT ${assignments.creatorId}`),
+      totalReach: sum(posts.reach),
+    })
+    .from(assignments)
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .leftJoin(posts, eq(posts.assignmentId, assignments.id))
+    .where(
+      and(
+        eq(assignments.briefingId, briefingId),
+        sql`${users.neighborhood} IS NOT NULL`,
+      ),
+    )
+    .groupBy(users.neighborhood)
+    .orderBy(sql`sum(${posts.reach}) DESC NULLS LAST`);
+
+  return rows.map((r) => ({
+    neighborhood: r.neighborhood ?? "Unknown",
+    creatorCount: r.creatorCount,
+    totalReach: parseInt(r.totalReach ?? "0"),
+  }));
+}
+
+export async function getBrandCreatorSchedule(briefingId: string) {
+  const now = new Date();
+  const rows = await db
+    .select({
+      creatorHandle: users.handle,
+      scheduledDate: assignments.scheduledDate,
+      scheduleTimeStart: assignments.scheduleTimeStart,
+      scheduleTimeEnd: assignments.scheduleTimeEnd,
+    })
+    .from(assignments)
+    .innerJoin(users, eq(assignments.creatorId, users.id))
+    .where(
+      and(
+        eq(assignments.briefingId, briefingId),
+        sql`${assignments.status} IN ('accepted', 'scheduled')`,
+        sql`${assignments.scheduledDate} > ${now}`,
+      ),
+    )
+    .orderBy(assignments.scheduledDate)
+    .limit(7);
+
+  return rows;
+}
+
+export async function getBrandTrendScore(brandId: string) {
+  const brand = await getBrandByUserId_byBrandId(brandId);
+  if (!brand?.address) return { neighborhood: "Unknown", trendLabel: "Active", isRising: false };
+
+  // Parse neighborhood from address (e.g. "8906 Melrose Ave, West Hollywood, CA" -> "West Hollywood")
+  const parts = brand.address.split(",");
+  const neighborhood = parts.length >= 2 ? parts[parts.length - 2].trim().replace(/\s+CA$/, "").replace(/\s+\d{5}.*/, "") : "Unknown";
+
+  // Check recent HI + amplifications in last 14 days
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 14);
+
+  const briefing = await getBrandBriefing(brandId);
+  if (!briefing) return { neighborhood, trendLabel: "Active", isRising: false };
+
+  const [recentHi] = await db
+    .select({ total: sum(posts.hiCalculated) })
+    .from(posts)
+    .innerJoin(assignments, eq(posts.assignmentId, assignments.id))
+    .where(
+      and(
+        eq(assignments.briefingId, briefing.id),
+        sql`${posts.measuredAt} >= ${cutoff}`,
+        sql`${posts.hiCalculated} IS NOT NULL`,
+      ),
+    );
+
+  const [recentAmps] = await db
+    .select({ count: count() })
+    .from(propagationEvents)
+    .where(
+      and(
+        eq(propagationEvents.briefingId, briefing.id),
+        sql`${propagationEvents.createdAt} >= ${cutoff}`,
+      ),
+    );
+
+  const totalRecentHi = parseFloat(recentHi?.total ?? "0");
+  const ampCount = recentAmps?.count ?? 0;
+  const isRising = totalRecentHi > 5 || ampCount > 1;
+
+  return {
+    neighborhood,
+    trendLabel: isRising ? `Rising in ${neighborhood}` : `Active in ${neighborhood}`,
+    isRising,
+  };
+}
+
+async function getBrandByUserId_byBrandId(brandId: string) {
+  const [brand] = await db.select().from(brands).where(eq(brands.id, brandId));
+  return brand ?? null;
 }

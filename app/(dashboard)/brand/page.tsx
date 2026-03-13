@@ -1,4 +1,4 @@
-import { getBrandByUserId, getBrandStats, getBrandBriefing, getCurrentMonthHi, getAllTimeHi } from "@/lib/db/queries";
+import { getBrandByUserId, getBrandStats, getBrandBriefing, getCurrentMonthHi, getAllTimeHi, getBriefingInfluenceSpread, getBrandCreatorSchedule, getBrandTrendScore } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { HiBudget } from "@/components/ui/hi-display";
@@ -53,6 +53,17 @@ export default async function BrandDashboard() {
               <p className="text-xs text-gray-500 mt-0.5">
                 ${monthSpent.toFixed(0)} spent in {monthName}
               </p>
+              {/* ROI estimate */}
+              {stats.engagement.reach > 0 && (
+                <div className="flex items-center justify-center gap-3 mt-1.5">
+                  <span className="text-xs text-gray-400">
+                    Est. reach: {stats.engagement.reach.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    Est. visits: {Math.round(stats.engagement.reach * 0.02).toLocaleString()}
+                  </span>
+                </div>
+              )}
             </div>
             <HiBudget
               budgetHi={briefing.budgetHi}
@@ -72,25 +83,89 @@ export default async function BrandDashboard() {
         );
       })()}
 
+      {/* Influence Spread Card */}
+      {briefing && await (async () => {
+        const spread = await getBriefingInfluenceSpread(briefing.id);
+        if (spread.creatorsPosted === 0) return null;
+        return (
+          <Card className="mb-6">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Influence Spread</h2>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-2xl font-extrabold">{spread.creatorsPosted}</p>
+                <p className="text-xs text-gray-500">creators posted</p>
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold">{spread.amplificationCount}</p>
+                <p className="text-xs text-gray-500">amplifications</p>
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold">{spread.secondaryCreators}</p>
+                <p className="text-xs text-gray-500">secondary creators</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 text-center mt-3">
+              Your influence is spreading beyond your creators.
+            </p>
+          </Card>
+        );
+      })()}
+
+      {/* Trend Score */}
+      {await (async () => {
+        const trend = await getBrandTrendScore(brand.id);
+        return (
+          <Card className="mb-6">
+            <div className="flex items-center gap-2">
+              {trend.isRising && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                  <path d="M7 17l5-5 4 4 6-8" />
+                  <path d="M17 8h5v5" />
+                </svg>
+              )}
+              <p className="text-sm font-semibold">{trend.trendLabel}</p>
+            </div>
+          </Card>
+        );
+      })()}
+
       {/* HI Delivered with engagement breakdown */}
       <HiBreakdown
         hiDelivered={parseFloat(stats.hiDelivered as string).toFixed(1)}
         engagement={stats.engagement}
       />
 
-      {/* Next Visit */}
-      {stats.nextVisit && (
-        <Card className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">Next Creator Visit</h3>
-          <p className="text-sm text-gray-600">
-            {new Date(stats.nextVisit).toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "short",
-              day: "numeric",
-            })}
-          </p>
-        </Card>
-      )}
+      {/* Creator Schedule */}
+      {briefing && await (async () => {
+        const schedule = await getBrandCreatorSchedule(briefing.id);
+        if (schedule.length === 0) return null;
+        return (
+          <Card className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Upcoming Creator Visits</h3>
+            <div className="space-y-2">
+              {schedule.map((visit, i) => {
+                const d = visit.scheduledDate ? new Date(visit.scheduledDate) : null;
+                return (
+                  <div key={i} className="flex items-center gap-3 text-sm">
+                    <span className="text-xs text-gray-400 w-8 shrink-0">
+                      {d ? d.toLocaleDateString("en-US", { weekday: "short" }) : "TBD"}
+                    </span>
+                    <span className="text-xs text-gray-600 w-14 shrink-0">
+                      {d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
+                    </span>
+                    <span className="font-medium">@{visit.creatorHandle}</span>
+                    {visit.scheduleTimeStart && (
+                      <span className="text-xs text-gray-400 ml-auto">
+                        {visit.scheduleTimeStart}{visit.scheduleTimeEnd ? ` - ${visit.scheduleTimeEnd}` : ""}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Quick Links */}
       <div className="flex flex-col gap-2">
@@ -105,12 +180,12 @@ export default async function BrandDashboard() {
             </div>
           </Card>
         </Link>
-        <Link href="/brand/collabs" className="block">
+        <Link href="/brand/campaigns" className="block">
           <Card className="hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold">Collabs</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Creator content for your restaurant</p>
+                <h3 className="text-sm font-semibold">Campaigns</h3>
+                <p className="text-xs text-gray-500 mt-0.5">See which creators drive the most impact</p>
               </div>
               <span className="text-gray-400">&rarr;</span>
             </div>

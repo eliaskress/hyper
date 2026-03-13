@@ -4,10 +4,9 @@ import { useState } from "react";
 
 export function ReferralActions({
   referralLink,
-  referralCode,
 }: {
   referralLink: string;
-  referralCode: string;
+  referralCode?: string;
 }) {
   const [copied, setCopied] = useState(false);
 

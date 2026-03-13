@@ -1,4 +1,4 @@
-import { getBrandByUserId, getBrandBriefing, getBriefingReports, getBrandStats } from "@/lib/db/queries";
+import { getBrandByUserId, getBrandBriefing, getBriefingReports, getBriefingInfluenceSpread } from "@/lib/db/queries";
 import { Card, StatCard } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { WhatsAppPreview } from "@/components/ui/whatsapp-preview";
@@ -14,8 +14,6 @@ export default async function ReportsPage() {
   if (!brand) return <p className="p-6 text-gray-500">Brand not found.</p>;
 
   const briefing = await getBrandBriefing(brand.id);
-  const stats = await getBrandStats(brand.id);
-
   if (!briefing) {
     return (
       <div className="p-4 space-y-6">
@@ -45,21 +43,49 @@ export default async function ReportsPage() {
       </div>
 
       {/* Hero HI */}
-      <Card className="p-4 text-center">
-        <p className="text-xs text-gray-500 mb-1">Total HI Delivered</p>
+      <div className="rounded-2xl bg-[#2563eb] text-white p-5 text-center">
+        <p className="text-xs text-white/60 mb-1">Total HI Delivered</p>
         <p className="text-4xl font-extrabold">{totalHi.toFixed(1)}</p>
-        <p className="text-xs text-gray-400 mt-1">{measuredPosts.length} post{measuredPosts.length !== 1 ? "s" : ""} measured</p>
-      </Card>
+        <p className="text-xs text-white/60 mt-1">{measuredPosts.length} post{measuredPosts.length !== 1 ? "s" : ""} measured</p>
+      </div>
 
       {/* Engagement Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Engagements" value={totalEngagements.toLocaleString()} accent />
+        <StatCard label="Engagements" value={totalEngagements.toLocaleString()} color="green" />
         <StatCard label="Reach" value={totalReach.toLocaleString()} />
         <StatCard label="Likes" value={totalLikes.toLocaleString()} />
         <StatCard label="Comments" value={totalComments.toLocaleString()} />
         <StatCard label="Saves" value={totalSaves.toLocaleString()} />
         <StatCard label="Shares" value={totalShares.toLocaleString()} />
       </div>
+
+      {/* Influence Propagation */}
+      {await (async () => {
+        const spread = await getBriefingInfluenceSpread(briefing.id);
+        return (
+          <Card className="p-4">
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Influence Propagation</h2>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-lg font-bold">{spread.creatorsPosted}</p>
+                <p className="text-xs text-gray-500">Creators posted</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold">{spread.amplificationCount}</p>
+                <p className="text-xs text-gray-500">Amplifications</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold">
+                  {spread.totalCreatorReach >= 1000
+                    ? `${(spread.totalCreatorReach / 1000).toFixed(1)}k`
+                    : spread.totalCreatorReach}
+                </p>
+                <p className="text-xs text-gray-500">Total reach</p>
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Post Results */}
       <div>

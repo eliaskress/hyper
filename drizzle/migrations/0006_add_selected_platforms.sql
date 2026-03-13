@@ -1,1 +1,2 @@
-ALTER TABLE "assignments" ADD COLUMN "selected_platforms" jsonb;
+-- Already applied manually, kept as no-op for migration journal consistency
+SELECT 1;

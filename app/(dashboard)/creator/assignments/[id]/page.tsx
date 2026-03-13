@@ -4,7 +4,6 @@ import { getAssignmentDetail } from "@/lib/db/queries";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { HiEarnings } from "@/components/ui/hi-display";
-import { PRICE_PER_HI, REVENUE_SPLIT } from "@/lib/hi";
 import { notFound } from "next/navigation";
 import { AssignmentActions } from "./assignment-actions";
 
@@ -43,6 +42,9 @@ export default async function AssignmentDetailPage({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
             Verified
           </span>
+        )}
+        {a.status === "invited" && a.responseDueAt && (
+          <ResponseDeadline dueAt={a.responseDueAt} />
         )}
       </div>
 
@@ -195,7 +197,7 @@ export default async function AssignmentDetailPage({
                     <div className="flex items-baseline justify-between mb-2">
                       <span className="text-lg font-bold">{parseFloat(post.hiCalculated).toFixed(1)} HI</span>
                       <span className="text-sm font-semibold text-emerald-600">
-                        ${(parseFloat(post.hiCalculated) * PRICE_PER_HI * REVENUE_SPLIT.creator / 100).toFixed(2)}
+                        ${(parseFloat(post.hiCalculated) * 4).toFixed(2)}
                       </span>
                     </div>
                     <div className="grid grid-cols-5 gap-1 text-center text-xs">
@@ -238,7 +240,7 @@ export default async function AssignmentDetailPage({
           </h2>
           <HiEarnings hi={totalHi} className="text-lg" />
           <p className="text-xs text-gray-500 mt-1">
-            {totalHi.toFixed(1)} HI &times; ${PRICE_PER_HI}/HI &times; {REVENUE_SPLIT.creator}% creator share
+            {totalHi.toFixed(1)} HI &times; $4/HI
           </p>
         </Card>
       )}
@@ -253,6 +255,37 @@ export default async function AssignmentDetailPage({
         availabilityDays={days}
         availabilityMeals={meals}
       />
+    </div>
+  );
+}
+
+function ResponseDeadline({ dueAt }: { dueAt: Date }) {
+  const now = new Date();
+  const diff = dueAt.getTime() - now.getTime();
+
+  if (diff <= 0) {
+    return (
+      <div className="mt-2 flex items-center gap-1.5 text-xs text-red-600 font-medium">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Response window expired
+      </div>
+    );
+  }
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const isUrgent = hours < 6;
+  const isWarning = hours < 24;
+
+  const color = isUrgent ? "text-red-600" : isWarning ? "text-amber-600" : "text-blue-600";
+  const label = hours < 24
+    ? `${hours}h ${minutes}m left to respond`
+    : `${Math.floor(hours / 24)}d ${hours % 24}h left to respond`;
+
+  return (
+    <div className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${color}`}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      {label}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { HiBreakdownDetail } from "./hi-breakdown-detail";
 
 interface Props {
   hiDelivered: string;
@@ -40,9 +41,10 @@ export function HiBreakdown({ hiDelivered, engagement }: Props) {
           <p className="font-medium">{engagement.reach.toLocaleString()}</p>
         </div>
       </div>
-      <p className="text-[11px] text-gray-400 mt-2">
-        HI = 100 &times; (L + 2C + 6S + 8SH) / R
+      <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
+        HI measures real influence. Shares and saves count more because they spread your restaurant to new people.
       </p>
+      <HiBreakdownDetail />
     </Card>
   );
 }

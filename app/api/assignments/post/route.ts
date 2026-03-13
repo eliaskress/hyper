@@ -3,6 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { assignments, posts } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getAssignmentEmailContext } from "@/lib/db/queries";
+import { sendCreatorPostedEmail } from "@/lib/email";
 
 const submitSchema = z.object({
   assignmentId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
@@ -98,6 +100,17 @@ export async function POST(request: NextRequest) {
         .update(assignments)
         .set({ status: "posted" })
         .where(eq(assignments.id, assignmentId));
+    }
+
+    // Notify restaurant about the post (respects preferences)
+    const ctx = await getAssignmentEmailContext(assignmentId);
+    if (ctx?.brandEmail && ctx.brandEmailPreferences?.creatorPosted !== false) {
+      sendCreatorPostedEmail(ctx.brandEmail, {
+        brandName: ctx.brandName,
+        creatorHandle: ctx.creatorHandle,
+        platform,
+        postUrl,
+      });
     }
 
     return NextResponse.json({

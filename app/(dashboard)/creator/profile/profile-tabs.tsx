@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { EmailPreferences } from "@/components/ui/email-preferences";
 
-type Tab = "info" | "payments";
+type Tab = "info" | "payments" | "notifications";
 
 interface Profile {
   id: string;
   handle: string;
   instagramId: string;
+  email: string | null;
   avatar: string | null;
   followersCount: number | null;
   location: string | null;
@@ -19,6 +21,7 @@ interface Profile {
   higScore: number;
   primaryPlatform: string | null;
   platforms: string[] | null;
+  emailPreferences: Record<string, boolean> | null;
   createdAt: Date;
 }
 
@@ -57,12 +60,29 @@ export function ProfileTabs({ profile, stats }: { profile: Profile; stats: Stats
         >
           Payments
         </button>
+        <button
+          onClick={() => setTab("notifications")}
+          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+            tab === "notifications"
+              ? "bg-white text-black shadow-sm"
+              : "text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          Emails
+        </button>
       </div>
 
       {tab === "info" ? (
         <InfoTab profile={profile} stats={stats} />
-      ) : (
+      ) : tab === "payments" ? (
         <PaymentsTab profile={profile} />
+      ) : (
+        <EmailPreferences
+          userId={profile.id}
+          role="creator"
+          email={profile.email}
+          preferences={profile.emailPreferences}
+        />
       )}
     </>
   );
@@ -263,8 +283,8 @@ function InfoTab({ profile, stats }: { profile: Profile; stats: Stats }) {
             </span>
           </div>
           <div className="text-sm text-gray-600">
-            <p>Your Hyper Influence Grade determines which restaurants you&apos;re matched with.</p>
-            <p className="text-xs text-gray-400 mt-1">Higher HIG = better assignments</p>
+            <p>Your Hyper Influence Grade determines which campaigns and amplification opportunities you receive.</p>
+            <p className="text-xs text-gray-400 mt-1">Higher HIG = better campaigns and amplification access</p>
           </div>
         </div>
       </Card>
@@ -397,7 +417,7 @@ function PaymentsTab({ profile }: { profile: Profile }) {
             { step: "1", text: "Hyper matches you with a collab" },
             { step: "2", text: "Visit, create content, and post" },
             { step: "3", text: "Send analytics 7 days later and HI is calculated" },
-            { step: "4", text: "Earn $4/HI (40% creator share of $10/HI)" },
+            { step: "4", text: "Earn $4 for every HI you generate" },
           ].map((item) => (
             <div key={item.step} className="flex gap-3 items-start">
               <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">

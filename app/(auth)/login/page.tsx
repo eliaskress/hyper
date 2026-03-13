@@ -13,11 +13,11 @@ export default function LoginPage() {
           className="group w-full rounded-2xl border-2 border-gray-100 bg-white p-6 text-left hover:border-black hover:shadow-lg transition-all duration-200 block"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-bold text-lg">Creator</span>
+            <span className="font-bold text-lg">I create influence</span>
             <span className="text-gray-300 group-hover:text-black group-hover:translate-x-1 transition-all duration-200 text-xl">&rarr;</span>
           </div>
           <span className="text-gray-500 text-sm leading-relaxed">
-            Get matched with restaurants, create content, earn based on your influence.
+            Post content. Earn from real engagement.
           </span>
         </Link>
         <Link
@@ -25,11 +25,11 @@ export default function LoginPage() {
           className="group w-full rounded-2xl border-2 border-gray-100 bg-white p-6 text-left hover:border-black hover:shadow-lg transition-all duration-200 block"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-bold text-lg">Restaurant</span>
+            <span className="font-bold text-lg">I run a restaurant</span>
             <span className="text-gray-300 group-hover:text-black group-hover:translate-x-1 transition-all duration-200 text-xl">&rarr;</span>
           </div>
           <span className="text-gray-500 text-sm leading-relaxed">
-            Submit a briefing, Hyper handles the rest: matching, scheduling, measurement, reporting.
+            Watch influence spread through your neighborhood.
           </span>
         </Link>
       </div>

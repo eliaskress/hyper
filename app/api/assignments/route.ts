@@ -3,7 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { assignments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { getAssignmentById, getPayoutByAssignmentId, updatePayoutStatus } from "@/lib/db/queries";
+import { getAssignmentById, getAssignmentEmailContext, getPayoutByAssignmentId, updatePayoutStatus } from "@/lib/db/queries";
+import { sendMatchAcceptedEmail, sendCreatorAcceptedEmail, sendCreatorScheduledEmail, sendPaymentReceivedEmail } from "@/lib/email";
 
 const patchSchema = z.object({
   assignmentId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
@@ -56,6 +57,26 @@ export async function PATCH(request: NextRequest) {
         .set({ status: "accepted", selectedPlatforms })
         .where(eq(assignments.id, assignmentId))
         .returning();
+
+      // Send emails (non-blocking, respects preferences)
+      const ctx = await getAssignmentEmailContext(assignmentId);
+      if (ctx) {
+        if (ctx.creatorEmail && ctx.creatorEmailPreferences?.newMatches !== false) {
+          sendMatchAcceptedEmail(ctx.creatorEmail, {
+            creatorName: ctx.creatorHandle,
+            restaurantName: ctx.brandName,
+            address: ctx.brandAddress,
+          });
+        }
+        if (ctx.brandEmail && ctx.brandEmailPreferences?.creatorPosted !== false) {
+          sendCreatorAcceptedEmail(ctx.brandEmail, {
+            brandName: ctx.brandName,
+            creatorHandle: ctx.creatorHandle,
+            creatorFollowers: ctx.creatorFollowers,
+          });
+        }
+      }
+
       return NextResponse.json(updated);
     }
 
@@ -93,17 +114,30 @@ export async function PATCH(request: NextRequest) {
           { status: 400 },
         );
       }
+      const schedDate = new Date(scheduledDate);
       const [updated] = await db
         .update(assignments)
         .set({
           status: "scheduled",
-          scheduledDate: new Date(scheduledDate),
+          scheduledDate: schedDate,
           scheduleTypeField: scheduleTimeEnd ? "flexible" : "fixed",
           scheduleTimeStart,
           scheduleTimeEnd: scheduleTimeEnd ?? scheduleTimeStart,
         })
         .where(eq(assignments.id, assignmentId))
         .returning();
+
+      // Notify restaurant (respects preferences)
+      const ctx = await getAssignmentEmailContext(assignmentId);
+      if (ctx?.brandEmail && ctx.brandEmailPreferences?.creatorPosted !== false) {
+        sendCreatorScheduledEmail(ctx.brandEmail, {
+          brandName: ctx.brandName,
+          creatorHandle: ctx.creatorHandle,
+          visitDate: schedDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+          visitTime: scheduleTimeStart + (scheduleTimeEnd ? `-${scheduleTimeEnd}` : ""),
+        });
+      }
+
       return NextResponse.json(updated);
     }
 
@@ -129,6 +163,19 @@ export async function PATCH(request: NextRequest) {
         .returning();
       // Update payout status with demo stripe transfer ID
       await updatePayoutStatus(payout.id, "paid", `demo_tr_${Date.now()}`);
+
+      // Notify creator of payment (respects preferences)
+      const ctx = await getAssignmentEmailContext(assignmentId);
+      if (ctx?.creatorEmail && ctx.creatorEmailPreferences?.paymentReceived !== false) {
+        const hi = parseFloat(payout.hiAmount ?? "0");
+        sendPaymentReceivedEmail(ctx.creatorEmail, {
+          creatorName: ctx.creatorHandle,
+          restaurantName: ctx.brandName,
+          hiGenerated: hi,
+          amountUsd: hi * 4,
+        });
+      }
+
       return NextResponse.json(updated);
     }
 

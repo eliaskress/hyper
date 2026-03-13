@@ -13,6 +13,7 @@ const postSchema = z.object({
   availabilityDays: z.array(z.enum(VALID_DAYS as [string, ...string[]])).min(1, "Select at least one day"),
   availabilityMeals: z.array(z.enum(VALID_MEALS as [string, ...string[]])).min(1, "Select at least one meal"),
   budgetHi: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid budget format"),
+  responseHours: z.number().int().min(1).max(168).optional(),
 });
 
 const patchSchema = z.object({
@@ -22,6 +23,7 @@ const patchSchema = z.object({
   availabilityDays: z.array(z.enum(VALID_DAYS as [string, ...string[]])).min(1).optional(),
   availabilityMeals: z.array(z.enum(VALID_MEALS as [string, ...string[]])).min(1).optional(),
   budgetHi: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  responseHours: z.number().int().min(1).max(168).optional(),
   status: z.enum(["active", "paused", "completed"]).optional(),
 });
 
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
       availabilityDays: parsed.data.availabilityDays,
       availabilityMeals: parsed.data.availabilityMeals,
       budgetHi: parsed.data.budgetHi,
+      responseHours: parsed.data.responseHours,
     });
 
     return NextResponse.json(briefing, { status: 201 });
