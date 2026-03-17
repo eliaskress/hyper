@@ -10,6 +10,34 @@ If a user has to think about that for more than a second, something needs to cha
 
 ---
 
+## Two Core Principles
+
+### Fluidity
+
+A fluid application is one where the user never feels lost, idle, or forced to think about what to do next. The system continuously guides the user through the natural lifecycle of the product.
+
+- Every screen should lead naturally to the next action
+- Users should never hit a dead end or empty state without a clear path forward
+- The product lifecycle should feel like movement, not isolated dashboards
+
+### Coherence
+
+A coherent application is one where every screen reinforces the same underlying concept and mental model. For Hyper, that concept is **influence propagation**.
+
+Every part of the product must reinforce the same loop:
+
+1. Restaurant launches campaign
+2. Creator generates content
+3. Influence spreads
+4. HI is measured
+5. Earnings and ROI are produced
+6. More influence is generated
+
+- Creators should feel they are **operating an influence engine**
+- Restaurants should feel they are **watching influence spread through their neighborhood**
+
+---
+
 ## The Five Principles
 
 ### 1. One Job Per Screen
